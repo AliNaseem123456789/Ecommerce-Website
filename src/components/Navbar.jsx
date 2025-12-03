@@ -48,7 +48,6 @@ function Navbar() {
       {/* Desktop Navbar */}
       {!isMobile && (
         <>
-          {/* Top Section */}
           <div
             style={{
               display: "flex",
@@ -160,28 +159,38 @@ function Navbar() {
             onClick={() => setSidebarOpen(true)}
           />
           <img src={logo} alt="Logo" style={{ height: "30px" }} />
-          <div style={{ position: "relative" }}>
-            <FaShoppingCart
+
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", position: "relative" }}>
+            {/* Search Icon */}
+            <FaSearch
               style={{ fontSize: "24px", cursor: "pointer" }}
-              onClick={() => navigate("/cart")}
+              onClick={() => navigate("/search")}
             />
-            {cartCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-6px",
-                  right: "-10px",
-                  background: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  padding: "2px 6px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                }}
-              >
-                {cartCount}
-              </span>
-            )}
+
+            {/* Cart Icon with Badge */}
+            <div style={{ position: "relative" }}>
+              <FaShoppingCart
+                style={{ fontSize: "24px", cursor: "pointer" }}
+                onClick={() => navigate("/cart")}
+              />
+              {cartCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-6px",
+                    right: "-10px",
+                    background: "red",
+                    color: "white",
+                    borderRadius: "50%",
+                    padding: "2px 6px",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
