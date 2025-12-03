@@ -10,44 +10,45 @@ import {
   FaStore,
   FaTimes,
 } from "react-icons/fa";
-import { supabase } from "../pages/SupabaseClient"; // ✅ Add this
+import { supabase } from "../pages/SupabaseClient";
 import logo from "../assets/Logos/logo2.png";
 
 function Navbar() {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0); // ✅ cart count
+  const [cartCount, setCartCount] = useState(0); // total quantity of cart items
 
-  // Fetch cart items count
-  useEffect(() => {
-    fetchCartCount();
-
-    // Optional: poll every 10s for live updates
-    const interval = setInterval(fetchCartCount, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchCartCount = async () => {
-    const { data, error } = await supabase
-      .from("cart_items")
-      .select("cart_item_id")
-      .eq("user_id", 1);
-
-    if (!error) setCartCount(data.length); // unique items count
-  };
-
+  // Detect window resize
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Fetch cart total quantity
+  useEffect(() => {
+    fetchCartCount();
+  }, []);
+
+  const fetchCartCount = async () => {
+    const { data, error } = await supabase
+      .from("cart_items")
+      .select("quantity")
+      .eq("user_id", 1); // replace 1 with dynamic user id if needed
+
+    if (!error && data) {
+      const totalQty = data.reduce((sum, item) => sum + item.quantity, 0);
+      setCartCount(totalQty);
+    }
+  };
+
   return (
     <div style={{ width: "100%", fontFamily: "Arial, sans-serif" }}>
       {/* Desktop Navbar */}
       {!isMobile && (
         <>
+          {/* Top Section */}
           <div
             style={{
               display: "flex",
@@ -87,25 +88,20 @@ function Navbar() {
             <div style={{ display: "flex", gap: "20px", fontSize: "22px", position: "relative" }}>
               <FaUser style={{ cursor: "pointer" }} title="Account" />
               <FaStar style={{ cursor: "pointer" }} title="Wishlist" />
-              
               <Link to="/cart" style={{ position: "relative" }}>
                 <FaShoppingCart style={{ cursor: "pointer" }} title="Cart" />
-                
-                {/* Badge */}
                 {cartCount > 0 && (
                   <span
                     style={{
                       position: "absolute",
-                      top: "-6px",
+                      top: "-8px",
                       right: "-10px",
                       background: "red",
                       color: "white",
-                      fontSize: "12px",
-                      fontWeight: "bold",
                       borderRadius: "50%",
                       padding: "2px 6px",
-                      minWidth: "18px",
-                      textAlign: "center",
+                      fontSize: "12px",
+                      fontWeight: "bold",
                     }}
                   >
                     {cartCount}
@@ -115,6 +111,7 @@ function Navbar() {
             </div>
           </div>
 
+          {/* Bottom Navbar Strip */}
           <div style={{ backgroundColor: "#111", padding: "12px 20px" }}>
             <div
               style={{
@@ -141,7 +138,120 @@ function Navbar() {
         </>
       )}
 
-      {/* Mobile Bottom Bar */}
+      {/* Mobile Top Bar */}
+      {isMobile && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "12px 16px",
+            backgroundColor: "white",
+            boxShadow: "0 1px 5px rgba(0,0,0,0.1)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            zIndex: 1001,
+          }}
+        >
+          <FaBars
+            style={{ fontSize: "24px", cursor: "pointer" }}
+            onClick={() => setSidebarOpen(true)}
+          />
+          <img src={logo} alt="Logo" style={{ height: "30px" }} />
+          <div style={{ position: "relative" }}>
+            <FaShoppingCart
+              style={{ fontSize: "24px", cursor: "pointer" }}
+              onClick={() => navigate("/cart")}
+            />
+            {cartCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-6px",
+                  right: "-10px",
+                  background: "red",
+                  color: "white",
+                  borderRadius: "50%",
+                  padding: "2px 6px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+              >
+                {cartCount}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sidebar Drawer */}
+      {isMobile && sidebarOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            height: "100%",
+            width: "70%",
+            background: "#fff",
+            zIndex: 1002,
+            padding: "20px",
+            boxShadow: "2px 0 8px rgba(0,0,0,0.2)",
+            overflowY: "auto",
+            transition: "transform 0.3s ease-in-out",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <FaTimes
+              style={{ fontSize: "24px", cursor: "pointer" }}
+              onClick={() => setSidebarOpen(false)}
+            />
+          </div>
+
+          <nav
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+              fontSize: "18px",
+              marginTop: "20px",
+            }}
+          >
+            <Link
+              to="/"
+              onClick={() => setSidebarOpen(false)}
+              style={{ textDecoration: "none", color: "#111" }}
+            >
+              Home
+            </Link>
+            <Link
+              to="/shop"
+              onClick={() => setSidebarOpen(false)}
+              style={{ textDecoration: "none", color: "#111" }}
+            >
+              Shop
+            </Link>
+            <Link
+              to="/wishlist"
+              onClick={() => setSidebarOpen(false)}
+              style={{ textDecoration: "none", color: "#111" }}
+            >
+              Wishlist
+            </Link>
+            <Link
+              to="/about"
+              onClick={() => setSidebarOpen(false)}
+              style={{ textDecoration: "none", color: "#111" }}
+            >
+              About Us
+            </Link>
+          </nav>
+        </div>
+      )}
+
+      {/* Bottom Navbar for Mobile */}
       {isMobile && (
         <div
           style={{
@@ -158,20 +268,42 @@ function Navbar() {
             zIndex: 1000,
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }}
-               onClick={() => navigate("/")}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/")}
+          >
             <FaHome size={22} />
             <span style={{ fontSize: "12px" }}>Home</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }}
-               onClick={() => navigate("/shop")}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/shop")}
+          >
             <FaStore size={22} />
             <span style={{ fontSize: "12px" }}>Shop</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", position: "relative" }}
-               onClick={() => navigate("/cart")}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+              position: "relative",
+            }}
+            onClick={() => navigate("/cart")}
+          >
             <FaShoppingCart size={22} />
             {cartCount > 0 && (
               <span
@@ -181,12 +313,10 @@ function Navbar() {
                   right: "-10px",
                   background: "red",
                   color: "white",
-                  fontSize: "12px",
-                  fontWeight: "bold",
                   borderRadius: "50%",
                   padding: "2px 6px",
-                  minWidth: "18px",
-                  textAlign: "center",
+                  fontSize: "12px",
+                  fontWeight: "bold",
                 }}
               >
                 {cartCount}
@@ -195,13 +325,23 @@ function Navbar() {
             <span style={{ fontSize: "12px" }}>Cart</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }}
-               onClick={() => navigate("/wishlist")}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => navigate("/wishlist")}
+          >
             <FaStar size={22} />
             <span style={{ fontSize: "12px" }}>Wishlist</span>
           </div>
         </div>
       )}
+
+      {/* Spacer for Mobile */}
+      {isMobile && <div style={{ height: "56px" }}></div>}
     </div>
   );
 }
