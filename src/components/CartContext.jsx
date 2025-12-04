@@ -1,47 +1,70 @@
 import React, { createContext, useState, useEffect } from "react";
-import { addToCart as addToCartDB } from "../api/cart";
 import { supabase } from "../pages/SupabaseClient";
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const user_id = 1;
+  const user_id = 1; // Replace with dynamic user ID in real app
   const [cartItems, setCartItems] = useState([]);
 
+  // Fetch cart items from Supabase
+  const fetchCart = async () => {
+    const { data, error } = await supabase
+      .from("cart_items")
+      .select(`cart_item_id, quantity, products(*)`)
+      .eq("user_id", user_id);
+
+    if (!error && data) setCartItems(data);
+  };
+
   useEffect(() => {
-    const fetchCart = async () => {
-      const { data, error } = await supabase
-        .from("cart_items")
-        .select(`cart_item_id, quantity, products(*)`)
-        .eq("user_id", user_id);
-      if (!error && data) setCartItems(data);
-    };
     fetchCart();
   }, []);
 
+  // Total number of items in cart
   const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
+  // Add product to cart
   const addToCart = async (product) => {
-    await addToCartDB(user_id, product.product_id);
+    // Check if product exists in cart
+    const existing = cartItems.find(
+      (item) => item.products.product_id === product.product_id
+    );
 
-    setCartItems((prevItems) => {
-      const existing = prevItems.find(
-        (item) => item.products.product_id === product.product_id
-      );
-      if (existing) {
-        return prevItems.map((item) =>
-          item.products.product_id === product.product_id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+    if (existing) {
+      // Update quantity in Supabase
+      const { error } = await supabase
+        .from("cart_items")
+        .update({ quantity: existing.quantity + 1 })
+        .eq("cart_item_id", existing.cart_item_id);
+
+      if (!error) {
+        setCartItems((prev) =>
+          prev.map((item) =>
+            item.cart_item_id === existing.cart_item_id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
         );
-      } else {
-        return [...prevItems, { cart_item_id: Date.now(), products: product, quantity: 1 }];
       }
-    });
+    } else {
+      // Insert new item in Supabase
+      const { data, error } = await supabase
+        .from("cart_items")
+        .insert({ user_id, product_id: product.product_id, quantity: 1 })
+        .select(`cart_item_id, quantity, products(*)`)
+        .single();
+
+      if (!error && data) {
+        setCartItems((prev) => [...prev, data]);
+      }
+    }
   };
 
+  // Update quantity of a cart item
   const updateQuantity = async (cart_item_id, newQty) => {
     if (newQty < 1) return;
+
     const { error } = await supabase
       .from("cart_items")
       .update({ quantity: newQty })
@@ -56,6 +79,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  // Remove item from cart
   const removeFromCart = async (cart_item_id) => {
     const { error } = await supabase
       .from("cart_items")
@@ -69,7 +93,7 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, updateQuantity, removeFromCart, totalItems }}
+      value={{ cartItems, addToCart, updateQuantity, removeFromCart, totalItems, fetchCart }}
     >
       {children}
     </CartContext.Provider>
