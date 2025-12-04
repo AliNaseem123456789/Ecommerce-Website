@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaUser,
@@ -9,38 +9,41 @@ import {
   FaHome,
   FaStore,
   FaTimes,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import { supabase } from "../pages/SupabaseClient";
 import logo from "../assets/Logos/logo2.png";
+import { CartContext } from "../components/CartContext"; // Use the updated CartContext
 
 function Navbar() {
   const navigate = useNavigate();
+  const { totalItems } = useContext(CartContext); // Real-time cart count
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0); // total quantity of cart items
+  const [categories, setCategories] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Detect window resize
+  // Handle window resize
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch cart total quantity
+  // Fetch categories for dropdown
   useEffect(() => {
-    fetchCartCount();
+    fetchCategories();
   }, []);
 
-  const fetchCartCount = async () => {
-    const { data, error } = await supabase
-      .from("cart_items")
-      .select("quantity")
-      .eq("user_id", 1); // replace 1 with dynamic user id if needed
+  const fetchCategories = async () => {
+    const { data } = await supabase.from("categories").select("*");
+    if (data) setCategories(data);
+  };
 
-    if (!error && data) {
-      const totalQty = data.reduce((sum, item) => sum + item.quantity, 0);
-      setCartCount(totalQty);
-    }
+  const handleCategoryClick = (category_id) => {
+    navigate(`/shop?category=${category_id}`);
+    setDropdownOpen(false);
   };
 
   return (
@@ -60,7 +63,7 @@ function Navbar() {
           >
             <img src={logo} alt="Logo" style={{ height: "50px" }} />
 
-            <div style={{ flex: 1, margin: "0 10%" }}>
+            <div style={{ flex: 1, margin: "0 10%", position: "relative" }}>
               <div style={{ position: "relative" }}>
                 <input
                   type="text"
@@ -84,12 +87,19 @@ function Navbar() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "20px", fontSize: "22px", position: "relative" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "20px",
+                fontSize: "22px",
+                position: "relative",
+              }}
+            >
               <FaUser style={{ cursor: "pointer" }} title="Account" />
               <FaStar style={{ cursor: "pointer" }} title="Wishlist" />
               <Link to="/cart" style={{ position: "relative" }}>
                 <FaShoppingCart style={{ cursor: "pointer" }} title="Cart" />
-                {cartCount > 0 && (
+                {totalItems > 0 && (
                   <span
                     style={{
                       position: "absolute",
@@ -103,7 +113,7 @@ function Navbar() {
                       fontWeight: "bold",
                     }}
                   >
-                    {cartCount}
+                    {totalItems}
                   </span>
                 )}
               </Link>
@@ -118,18 +128,66 @@ function Navbar() {
                 gap: "40px",
                 color: "white",
                 justifyContent: "center",
+                position: "relative",
               }}
             >
               <Link to="/" style={{ color: "white", textDecoration: "none" }}>
                 Home
               </Link>
-              <Link to="/shop" style={{ color: "white", textDecoration: "none" }}>
+              <Link
+                to="/shop"
+                style={{ color: "white", textDecoration: "none" }}
+              >
                 Shop
               </Link>
-              <Link to="/shop" style={{ color: "white", textDecoration: "none" }}>
-                All Accessories
-              </Link>
-              <Link to="/about" style={{ color: "white", textDecoration: "none" }}>
+
+              {/* Categories Dropdown */}
+              <div
+                style={{ position: "relative", cursor: "pointer" }}
+                onMouseEnter={() => setDropdownOpen(true)}
+                onMouseLeave={() => setDropdownOpen(false)}
+              >
+                <span style={{ color: "white", fontWeight: "500" }}>
+                  All Categories ▼
+                </span>
+
+                {dropdownOpen && (
+                  <ul
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      background: "white",
+                      color: "#111",
+                      borderRadius: "6px",
+                      listStyle: "none",
+                      padding: "8px 0",
+                      margin: 0,
+                      minWidth: "180px",
+                      boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+                      zIndex: 100,
+                    }}
+                  >
+                    {categories.map((cat) => (
+                      <li
+                        key={cat.category_id}
+                        onClick={() => handleCategoryClick(cat.category_id)}
+                        style={{
+                          padding: "8px 16px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {cat.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <Link
+                to="/about"
+                style={{ color: "white", textDecoration: "none" }}
+              >
                 About Us
               </Link>
             </div>
@@ -137,7 +195,7 @@ function Navbar() {
         </>
       )}
 
-      {/* Mobile Top Bar */}
+      {/* Mobile Navbar */}
       {isMobile && (
         <div
           style={{
@@ -160,20 +218,25 @@ function Navbar() {
           />
           <img src={logo} alt="Logo" style={{ height: "30px" }} />
 
-          <div style={{ display: "flex", alignItems: "center", gap: "16px", position: "relative" }}>
-            {/* Search Icon */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              position: "relative",
+            }}
+          >
             <FaSearch
               style={{ fontSize: "24px", cursor: "pointer" }}
               onClick={() => navigate("/search")}
             />
 
-            {/* Cart Icon with Badge */}
             <div style={{ position: "relative" }}>
               <FaShoppingCart
                 style={{ fontSize: "24px", cursor: "pointer" }}
                 onClick={() => navigate("/cart")}
               />
-              {cartCount > 0 && (
+              {totalItems > 0 && (
                 <span
                   style={{
                     position: "absolute",
@@ -187,7 +250,7 @@ function Navbar() {
                     fontWeight: "bold",
                   }}
                 >
-                  {cartCount}
+                  {totalItems}
                 </span>
               )}
             </div>
@@ -209,7 +272,6 @@ function Navbar() {
             padding: "20px",
             boxShadow: "2px 0 8px rgba(0,0,0,0.2)",
             overflowY: "auto",
-            transition: "transform 0.3s ease-in-out",
           }}
         >
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -242,6 +304,51 @@ function Navbar() {
             >
               Shop
             </Link>
+
+            {/* Mobile Categories Dropdown */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                style={{
+                  cursor: "pointer",
+                  color: "#111",
+                  fontWeight: "500",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                Categories{" "}
+                {dropdownOpen ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
+              </span>
+
+              {dropdownOpen && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    paddingLeft: "10px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  {categories.map((cat) => (
+                    <span
+                      key={cat.category_id}
+                      onClick={() => {
+                        handleCategoryClick(cat.category_id);
+                        setSidebarOpen(false);
+                        setDropdownOpen(false);
+                      }}
+                      style={{ cursor: "pointer", color: "#111" }}
+                    >
+                      {cat.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Link
               to="/wishlist"
               onClick={() => setSidebarOpen(false)}
@@ -278,32 +385,33 @@ function Navbar() {
           }}
         >
           <div
+            onClick={() => navigate("/")}
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               cursor: "pointer",
             }}
-            onClick={() => navigate("/")}
           >
             <FaHome size={22} />
             <span style={{ fontSize: "12px" }}>Home</span>
           </div>
 
           <div
+            onClick={() => navigate("/shop")}
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               cursor: "pointer",
             }}
-            onClick={() => navigate("/shop")}
           >
             <FaStore size={22} />
             <span style={{ fontSize: "12px" }}>Shop</span>
           </div>
 
           <div
+            onClick={() => navigate("/cart")}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -311,10 +419,9 @@ function Navbar() {
               cursor: "pointer",
               position: "relative",
             }}
-            onClick={() => navigate("/cart")}
           >
             <FaShoppingCart size={22} />
-            {cartCount > 0 && (
+            {totalItems > 0 && (
               <span
                 style={{
                   position: "absolute",
@@ -328,20 +435,20 @@ function Navbar() {
                   fontWeight: "bold",
                 }}
               >
-                {cartCount}
+                {totalItems}
               </span>
             )}
             <span style={{ fontSize: "12px" }}>Cart</span>
           </div>
 
           <div
+            onClick={() => navigate("/wishlist")}
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               cursor: "pointer",
             }}
-            onClick={() => navigate("/wishlist")}
           >
             <FaStar size={22} />
             <span style={{ fontSize: "12px" }}>Wishlist</span>

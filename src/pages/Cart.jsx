@@ -1,60 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "../pages/SupabaseClient";
+import React, { useContext } from "react";
+import { CartContext } from "../components/CartContext";
 import { Pencil, Truck, Ticket } from "lucide-react";
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([]);
-
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
-
-  const fetchCartItems = async () => {
-    const { data, error } = await supabase
-      .from("cart_items")
-      .select(`cart_item_id, quantity, products(*)`)
-      .eq("user_id", 1);
-
-    if (!error) setCartItems(data);
-  };
-
-  const updateQuantity = async (cart_item_id, newQty) => {
-    if (newQty < 1) return;
-    const { error } = await supabase
-      .from("cart_items")
-      .update({ quantity: newQty })
-      .eq("cart_item_id", cart_item_id);
-
-    if (!error) {
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.cart_item_id === cart_item_id
-            ? { ...item, quantity: newQty }
-            : item
-        )
-      );
-    }
-  };
-
-  const removeItem = async (cart_item_id) => {
-    const { error } = await supabase
-      .from("cart_items")
-      .delete()
-      .eq("cart_item_id", cart_item_id);
-
-    if (!error) {
-      setCartItems((prev) =>
-        prev.filter((item) => item.cart_item_id !== cart_item_id)
-      );
-    }
-  };
+  const { cartItems, updateQuantity, removeFromCart } = useContext(CartContext);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.products.price * item.quantity,
     0
   );
 
-  // ✅ Load images like ProductCard
   const getLocalImage = (id) => {
     try {
       return new URL(`/src/assets/products/${id}.jpeg`, import.meta.url).href;
@@ -154,7 +109,7 @@ export default function Cart() {
                     {item.products.name}
                   </p>
                   <button
-                    onClick={() => removeItem(item.cart_item_id)}
+                    onClick={() => removeFromCart(item.cart_item_id)}
                     style={{
                       background: "none",
                       color: "#007185",

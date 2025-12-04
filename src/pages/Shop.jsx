@@ -3,11 +3,18 @@ import ProductCard from "../components/ProductCard";
 import CategoryFilter from "../components/CategoryFilter";
 import { CartContext } from "../components/CartContext";
 import { supabase } from "../pages/SupabaseClient";
+import { useLocation } from "react-router-dom";
 
 function Shop() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialCategory = queryParams.get("category"); // category_id from Navbar
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(
+    initialCategory ? [Number(initialCategory)] : []
+  );
   const [grid, setGrid] = useState(3);
   const [sort, setSort] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -15,14 +22,17 @@ function Shop() {
 
   const { addToCart } = useContext(CartContext);
 
+  // Fetch categories on load
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  // Fetch products whenever selectedCategories or sort changes
   useEffect(() => {
     fetchProducts();
   }, [selectedCategories, sort, categories]);
 
+  // Handle window resize
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
@@ -35,21 +45,23 @@ function Shop() {
     if (data) setCategories(data);
   };
 
-  // Fetch products
+  // Fetch products from supabase
   const fetchProducts = async () => {
     let query = supabase.from("products").select("*");
 
+    // Apply category filter
     if (selectedCategories.length > 0) {
       query = query.in("category_id", selectedCategories);
     }
 
+    // Apply sorting
     if (sort === "price_asc") query = query.order("price", { ascending: true });
     if (sort === "price_desc") query = query.order("price", { ascending: false });
     if (sort === "rating") query = query.order("avg_rating", { ascending: false });
 
     const { data } = await query;
 
-    // Map products to include static images and category name
+    // Extend products with staticImages and categoryName
     const extended = (data || []).map((p) => {
       const formats = ["avif", "webp", "jpg", "jpeg", "png"];
       const maxImages = 6;
@@ -59,7 +71,6 @@ function Shop() {
         )
       );
 
-      // Find category name from category_id
       const category = categories.find((c) => c.category_id === p.category_id);
 
       return {
@@ -72,21 +83,22 @@ function Shop() {
     setProducts(extended);
   };
 
+  // Remove single category filter
   const removeCategory = (id) =>
     setSelectedCategories(selectedCategories.filter((c) => c !== id));
 
+  // Clear all filters
   const clearAll = () => {
     setSelectedCategories([]);
     setSort("");
   };
 
   const gridOptions = isMobile ? [2, "list"] : [2, 3, 4, "list"];
-
   const getIcon = (item) => {
-    if (item === "list") return "≡"; // bars icon
-    if (item === 2) return "▦"; // 2-grid
-    if (item === 3) return "▤"; // 3-grid
-    if (item === 4) return "▧"; // 4-grid
+    if (item === "list") return "≡"; 
+    if (item === 2) return "▦"; 
+    if (item === 3) return "▤"; 
+    if (item === 4) return "▧"; 
     return item;
   };
 
@@ -115,7 +127,7 @@ function Shop() {
           </div>
         )}
 
-        {/* MOBILE FILTER VERTICAL TAB */}
+        {/* MOBILE FILTER TAB */}
         {isMobile && !sidebarOpen && (
           <div
             onClick={() => setSidebarOpen(true)}
@@ -203,9 +215,7 @@ function Shop() {
               {/* GRID ICON BUTTONS */}
               <div style={{ display: "flex", gap: "10px" }}>
                 {gridOptions.map((item) => {
-                  const isActive =
-                    grid === item || (grid === 1 && item === "list");
-
+                  const isActive = grid === item || (grid === 1 && item === "list");
                   return (
                     <button
                       key={item}
@@ -262,10 +272,7 @@ function Shop() {
                     }}
                   >
                     {cat?.name}
-                    <span
-                      onClick={() => removeCategory(id)}
-                      style={{ cursor: "pointer" }}
-                    >
+                    <span onClick={() => removeCategory(id)} style={{ cursor: "pointer" }}>
                       ×
                     </span>
                   </div>
