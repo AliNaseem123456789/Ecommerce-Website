@@ -14,15 +14,18 @@ import {
 } from "react-icons/fa";
 import { supabase } from "../pages/SupabaseClient";
 import logo from "../assets/Logos/logo2.png";
-import { CartContext } from "../components/CartContext"; // Use the updated CartContext
+import { CartContext } from "../components/CartContext";
+import CartSidebar from "../components/CartSidebar";
 
 function Navbar() {
   const navigate = useNavigate();
-  const { totalItems } = useContext(CartContext); // Real-time cart count
+  const { totalItems } = useContext(CartContext);
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   // Handle window resize
   useEffect(() => {
@@ -31,7 +34,7 @@ function Navbar() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch categories for dropdown
+  // Fetch categories
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -44,6 +47,7 @@ function Navbar() {
   const handleCategoryClick = (category_id) => {
     navigate(`/shop?category=${category_id}`);
     setDropdownOpen(false);
+    setSidebarOpen(false);
   };
 
   return (
@@ -97,8 +101,12 @@ function Navbar() {
             >
               <FaUser style={{ cursor: "pointer" }} title="Account" />
               <FaStar style={{ cursor: "pointer" }} title="Wishlist" />
-              <Link to="/cart" style={{ position: "relative" }}>
-                <FaShoppingCart style={{ cursor: "pointer" }} title="Cart" />
+              <div style={{ position: "relative" }}>
+                <FaShoppingCart
+                  style={{ cursor: "pointer" }}
+                  title="Cart"
+                  onClick={() => setCartOpen(true)}
+                />
                 {totalItems > 0 && (
                   <span
                     style={{
@@ -116,7 +124,7 @@ function Navbar() {
                     {totalItems}
                   </span>
                 )}
-              </Link>
+              </div>
             </div>
           </div>
 
@@ -234,7 +242,7 @@ function Navbar() {
             <div style={{ position: "relative" }}>
               <FaShoppingCart
                 style={{ fontSize: "24px", cursor: "pointer" }}
-                onClick={() => navigate("/cart")}
+                onClick={() => setCartOpen(true)}
               />
               {totalItems > 0 && (
                 <span
@@ -319,7 +327,11 @@ function Navbar() {
                 }}
               >
                 Categories{" "}
-                {dropdownOpen ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
+                {dropdownOpen ? (
+                  <FaChevronUp size={14} />
+                ) : (
+                  <FaChevronDown size={14} />
+                )}
               </span>
 
               {dropdownOpen && (
@@ -335,11 +347,7 @@ function Navbar() {
                   {categories.map((cat) => (
                     <span
                       key={cat.category_id}
-                      onClick={() => {
-                        handleCategoryClick(cat.category_id);
-                        setSidebarOpen(false);
-                        setDropdownOpen(false);
-                      }}
+                      onClick={() => handleCategoryClick(cat.category_id)}
                       style={{ cursor: "pointer", color: "#111" }}
                     >
                       {cat.name}
@@ -411,7 +419,7 @@ function Navbar() {
           </div>
 
           <div
-            onClick={() => navigate("/cart")}
+            onClick={() => setCartOpen(true)}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -458,6 +466,9 @@ function Navbar() {
 
       {/* Spacer for Mobile */}
       {isMobile && <div style={{ height: "56px" }}></div>}
+
+      {/* Cart Sidebar */}
+      {cartOpen && <CartSidebar onClose={() => setCartOpen(false)} />}
     </div>
   );
 }

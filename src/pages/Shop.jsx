@@ -4,14 +4,19 @@ import CategoryFilter from "../components/CategoryFilter";
 import { CartContext } from "../components/CartContext";
 import { supabase } from "../pages/SupabaseClient";
 import { useLocation } from "react-router-dom";
+import QuickViewModal from "../components/QuickViewModal"; // ⬅️ Make sure it exists
 
 function Shop() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const initialCategory = queryParams.get("category"); // category_id from Navbar
+  const initialCategory = queryParams.get("category");
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+
+  // ✅ QUICK VIEW STATE
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+
   const [selectedCategories, setSelectedCategories] = useState(
     initialCategory ? [Number(initialCategory)] : []
   );
@@ -22,52 +27,47 @@ function Shop() {
 
   const { addToCart } = useContext(CartContext);
 
-  // Fetch categories on load
+  // Load categories first
   useEffect(() => {
-    fetchCategories();
+    const loadData = async () => {
+      await fetchCategories();
+    };
+    loadData();
   }, []);
 
-  // Fetch products whenever selectedCategories or sort changes
+  // Then load products
   useEffect(() => {
-    fetchProducts();
-  }, [selectedCategories, sort, categories]);
+    if (categories.length > 0) {
+      fetchProducts();
+    }
+  }, [categories, selectedCategories, sort]);
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Fetch all categories
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*");
     if (data) setCategories(data);
   };
 
-  // Fetch products from supabase
   const fetchProducts = async () => {
     let query = supabase.from("products").select("*");
 
-    // Apply category filter
     if (selectedCategories.length > 0) {
       query = query.in("category_id", selectedCategories);
     }
 
-    // Apply sorting
     if (sort === "price_asc") query = query.order("price", { ascending: true });
     if (sort === "price_desc") query = query.order("price", { ascending: false });
     if (sort === "rating") query = query.order("avg_rating", { ascending: false });
 
     const { data } = await query;
 
-    // Extend products with staticImages and categoryName
     const extended = (data || []).map((p) => {
       const formats = ["avif", "webp", "jpg", "jpeg", "png"];
       const maxImages = 6;
+
       const staticImages = Array.from({ length: maxImages }).flatMap((_, index) =>
         formats.map(
-          (ext) => `/assets/products/${p.product_id}/${index === 0 ? "main" : index}.${ext}`
+          (ext) =>
+            `/assets/products/${p.product_id}/${index === 0 ? "main" : index}.${ext}`
         )
       );
 
@@ -83,11 +83,15 @@ function Shop() {
     setProducts(extended);
   };
 
-  // Remove single category filter
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const removeCategory = (id) =>
     setSelectedCategories(selectedCategories.filter((c) => c !== id));
 
-  // Clear all filters
   const clearAll = () => {
     setSelectedCategories([]);
     setSort("");
@@ -95,10 +99,10 @@ function Shop() {
 
   const gridOptions = isMobile ? [2, "list"] : [2, 3, 4, "list"];
   const getIcon = (item) => {
-    if (item === "list") return "≡"; 
-    if (item === 2) return "▦"; 
-    if (item === 3) return "▤"; 
-    if (item === 4) return "▧"; 
+    if (item === "list") return "≡";
+    if (item === 2) return "▦";
+    if (item === 3) return "▤";
+    if (item === 4) return "▧";
     return item;
   };
 
@@ -116,7 +120,6 @@ function Shop() {
       </h1>
 
       <div style={{ display: "flex", gap: "20px", position: "relative" }}>
-        {/* DESKTOP FILTER SIDEBAR */}
         {!isMobile && (
           <div style={{ width: "22%", padding: "10px" }}>
             <CategoryFilter
@@ -127,7 +130,6 @@ function Shop() {
           </div>
         )}
 
-        {/* MOBILE FILTER TAB */}
         {isMobile && !sidebarOpen && (
           <div
             onClick={() => setSidebarOpen(true)}
@@ -150,7 +152,6 @@ function Shop() {
           </div>
         )}
 
-        {/* MOBILE SLIDE-IN SIDEBAR */}
         {isMobile && sidebarOpen && (
           <div
             style={{
@@ -194,9 +195,7 @@ function Shop() {
           </div>
         )}
 
-        {/* MAIN CONTENT */}
         <div style={{ flex: 1, padding: "10px" }}>
-          {/* TOP BAR: count + grid + sort */}
           <div
             style={{
               display: "flex",
@@ -212,7 +211,6 @@ function Shop() {
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              {/* GRID ICON BUTTONS */}
               <div style={{ display: "flex", gap: "10px" }}>
                 {gridOptions.map((item) => {
                   const isActive = grid === item || (grid === 1 && item === "list");
@@ -235,7 +233,6 @@ function Shop() {
                 })}
               </div>
 
-              {/* SORT */}
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
@@ -254,7 +251,6 @@ function Shop() {
             </div>
           </div>
 
-          {/* ACTIVE FILTER TAGS */}
           {selectedCategories.length > 0 && (
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               {selectedCategories.map((id) => {
@@ -292,7 +288,6 @@ function Shop() {
             </div>
           )}
 
-          {/* PRODUCT GRID */}
           <div
             style={{
               display: "grid",
@@ -306,11 +301,20 @@ function Shop() {
                 key={p.product_id}
                 product={{ ...p, images: p.staticImages }}
                 addToCart={addToCart}
+                onQuickView={setQuickViewProduct}  // ⬅️ QUICK VIEW HANDLER
               />
             ))}
           </div>
         </div>
       </div>
+
+      {/* ✅ QUICK VIEW MODAL RENDER */}
+      {quickViewProduct && (
+        <QuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+        />
+      )}
     </div>
   );
 }

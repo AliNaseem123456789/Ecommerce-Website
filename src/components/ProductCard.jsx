@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaEye, FaBalanceScale, FaRegStar } from "react-icons/fa";
 
-export default function ProductCard({ product, addToCart }) {
+export default function ProductCard({ product, addToCart, onQuickView }) {
   const [hover, setHover] = useState(false);
   const [iconHover, setIconHover] = useState(null);
 
@@ -71,33 +71,45 @@ export default function ProductCard({ product, addToCart }) {
             zIndex: 10,
           }}
         >
-          {["compare", "quick", "wishlist"].map((name) => {
-            const Icon =
-              name === "compare"
-                ? FaBalanceScale
-                : name === "quick"
-                ? FaEye
-                : FaRegStar;
-            return (
-              <div
-                key={name}
-                style={iconStyle(name)}
-                onMouseEnter={() => setIconHover(name)}
-                onMouseLeave={() => setIconHover(null)}
-              >
-                {iconHover === name && (
-                  <div style={tooltipStyle}>
-                    {name === "compare"
-                      ? "Compare"
-                      : name === "quick"
-                      ? "Quick View"
-                      : "Add to Wishlist"}
-                  </div>
-                )}
-                <Icon size={16} />
-              </div>
-            );
-          })}
+          {/* COMPARE */}
+          <div
+            style={iconStyle("compare")}
+            onMouseEnter={() => setIconHover("compare")}
+            onMouseLeave={() => setIconHover(null)}
+          >
+            {iconHover === "compare" && (
+              <div style={tooltipStyle}>Compare</div>
+            )}
+            <FaBalanceScale size={16} />
+          </div>
+
+          {/* QUICK VIEW — new code added here */}
+          <div
+            style={iconStyle("quick")}
+            onMouseEnter={() => setIconHover("quick")}
+            onMouseLeave={() => setIconHover(null)}
+            onClick={(e) => {
+              e.preventDefault();
+              onQuickView(product);
+            }}
+          >
+            {iconHover === "quick" && (
+              <div style={tooltipStyle}>Quick View</div>
+            )}
+            <FaEye size={16} />
+          </div>
+
+          {/* WISHLIST */}
+          <div
+            style={iconStyle("wishlist")}
+            onMouseEnter={() => setIconHover("wishlist")}
+            onMouseLeave={() => setIconHover(null)}
+          >
+            {iconHover === "wishlist" && (
+              <div style={tooltipStyle}>Add to Wishlist</div>
+            )}
+            <FaRegStar size={16} />
+          </div>
         </div>
       )}
 
