@@ -4,8 +4,59 @@ import CategoryFilter from "../components/CategoryFilter";
 import { CartContext } from "../components/CartContext";
 import { supabase } from "../pages/SupabaseClient";
 import { useLocation } from "react-router-dom";
-import QuickViewModal from "../components/QuickViewModal"; // ⬅️ Make sure it exists
+import QuickViewModal from "../components/QuickViewModal";
 
+// ---------------------
+// MUI IMPORTS
+// ---------------------
+import {
+  Box,
+  Typography,
+  Select,
+  MenuItem,
+  Button,
+  IconButton,
+  Paper,
+} from "@mui/material";
+
+// ---------------------
+// ICONS (SVG COMPONENTS)
+// ---------------------
+const TwoLineIcon = (props) => (
+  <svg width="20" height="20" fill="none" {...props}>
+    <rect x="5" y="5" width="3" height="10" rx="1" fill="currentColor" />
+    <rect x="12" y="5" width="3" height="10" rx="1" fill="currentColor" />
+  </svg>
+);
+
+const ThreeLineIcon = (props) => (
+  <svg width="20" height="20" fill="none" {...props}>
+    <rect x="3" y="5" width="3" height="10" rx="1" fill="currentColor" />
+    <rect x="8.5" y="5" width="3" height="10" rx="1" fill="currentColor" />
+    <rect x="14" y="5" width="3" height="10" rx="1" fill="currentColor" />
+  </svg>
+);
+
+const FourLineIcon = (props) => (
+  <svg width="20" height="20" fill="none" {...props}>
+    <rect x="2" y="5" width="2.7" height="10" rx="1" fill="currentColor" />
+    <rect x="6.5" y="5" width="2.7" height="10" rx="1" fill="currentColor" />
+    <rect x="11" y="5" width="2.7" height="10" rx="1" fill="currentColor" />
+    <rect x="15.5" y="5" width="2.7" height="10" rx="1" fill="currentColor" />
+  </svg>
+);
+
+const HamburgerIcon = (props) => (
+  <svg width="24" height="24" fill="none" {...props}>
+    <rect x="4" y="6" width="16" height="2.2" rx="1" fill="currentColor" />
+    <rect x="4" y="11" width="16" height="2.2" rx="1" fill="currentColor" />
+    <rect x="4" y="16" width="16" height="2.2" rx="1" fill="currentColor" />
+  </svg>
+);
+
+// ---------------------
+// MAIN SHOP COMPONENT
+// ---------------------
 function Shop() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -14,12 +65,11 @@ function Shop() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // ✅ QUICK VIEW STATE
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-
   const [selectedCategories, setSelectedCategories] = useState(
     initialCategory ? [Number(initialCategory)] : []
   );
+
   const [grid, setGrid] = useState(3);
   const [sort, setSort] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -27,19 +77,12 @@ function Shop() {
 
   const { addToCart } = useContext(CartContext);
 
-  // Load categories first
   useEffect(() => {
-    const loadData = async () => {
-      await fetchCategories();
-    };
-    loadData();
+    fetchCategories();
   }, []);
 
-  // Then load products
   useEffect(() => {
-    if (categories.length > 0) {
-      fetchProducts();
-    }
+    if (categories.length > 0) fetchProducts();
   }, [categories, selectedCategories, sort]);
 
   const fetchCategories = async () => {
@@ -98,224 +141,166 @@ function Shop() {
   };
 
   const gridOptions = isMobile ? [2, "list"] : [2, 3, 4, "list"];
-  const getIcon = (item) => {
-    if (item === "list") return "≡";
-    if (item === 2) return "▦";
-    if (item === 3) return "▤";
-    if (item === 4) return "▧";
-    return item;
+
+  const getIconComponent = (item) => {
+    if (item === "list") return <HamburgerIcon />;
+    if (item === 2) return <TwoLineIcon />;
+    if (item === 3) return <ThreeLineIcon />;
+    if (item === 4) return <FourLineIcon />;
+    return null;
   };
 
   return (
-    <div style={{ width: "100%", padding: "20px", position: "relative" }}>
-      <h1
-        style={{
-          textAlign: "center",
-          fontSize: "36px",
-          fontWeight: "700",
-          marginBottom: "40px",
-        }}
+    <Box width="100%" px={3} pb={5}>
+      <Typography
+        variant="h3"
+        align="center"
+        fontWeight={700}
+        mb={5}
+        sx={{ fontFamily: "Inter, sans-serif" }}
       >
         Shop
-      </h1>
+      </Typography>
 
-      <div style={{ display: "flex", gap: "20px", position: "relative" }}>
+      <Box display="flex" gap={3}>
+        {/* ---------------- Sidebar (Desktop Only) ---------------- */}
         {!isMobile && (
-          <div style={{ width: "22%", padding: "10px" }}>
+          <Box width="22%">
             <CategoryFilter
               categories={categories}
               selectedCategories={selectedCategories}
               setSelectedCategories={setSelectedCategories}
             />
-          </div>
+          </Box>
         )}
 
-        {isMobile && !sidebarOpen && (
-          <div
-            onClick={() => setSidebarOpen(true)}
-            style={{
-              position: "fixed",
-              top: "200px",
-              left: "0px",
-              background: "#f3f4f6",
-              padding: "10px 6px",
-              writingMode: "vertical-rl",
-              transform: "rotate(180deg)",
-              borderRadius: "6px 6px 0 0",
-              fontWeight: "600",
-              cursor: "pointer",
-              zIndex: 2500,
-              boxShadow: "0 0 6px rgba(0,0,0,0.15)",
-            }}
+        {/* ---------------- Main Content ---------------- */}
+        <Box flex={1}>
+          {/* ---------------- Sorting + Icons Bar ---------------- */}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+            flexWrap="wrap"
+            gap={2}
           >
-            Filters
-          </div>
-        )}
-
-        {isMobile && sidebarOpen && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              height: "100%",
-              width: "75%",
-              background: "#fff",
-              zIndex: 3000,
-              paddingTop: "80px",
-              paddingLeft: "15px",
-              paddingRight: "15px",
-              overflowY: "auto",
-              boxShadow: "2px 0 10px rgba(0,0,0,0.25)",
-              transition: "transform 0.3s ease",
-            }}
-          >
-            <button
-              onClick={() => setSidebarOpen(false)}
-              style={{
-                position: "absolute",
-                top: "60px",
-                right: "15px",
-                fontSize: "32px",
-                fontWeight: "bold",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                zIndex: 3100,
-              }}
-            >
-              ×
-            </button>
-
-            <CategoryFilter
-              categories={categories}
-              selectedCategories={selectedCategories}
-              setSelectedCategories={setSelectedCategories}
-            />
-          </div>
-        )}
-
-        <div style={{ flex: 1, padding: "10px" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "20px",
-              flexWrap: "wrap",
-              gap: "10px",
-            }}
-          >
-            <div style={{ fontSize: "16px", color: "#4b5563" }}>
+            <Typography fontSize="18px" color="grey.700" fontWeight={500}>
               Showing {products.length} results
-            </div>
+            </Typography>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <div style={{ display: "flex", gap: "10px" }}>
+            <Box display="flex" alignItems="center" gap={2}>
+              {/* GRID ICONS */}
+              <Box display="flex" gap={1}>
                 {gridOptions.map((item) => {
                   const isActive = grid === item || (grid === 1 && item === "list");
                   return (
-                    <button
+                    <Paper
                       key={item}
-                      onClick={() => setGrid(item === "list" ? 1 : item)}
-                      style={{
-                        padding: "8px 12px",
-                        fontSize: "18px",
-                        borderRadius: "8px",
-                        border: isActive ? "2px solid #0284c7" : "1px solid #d1d5db",
-                        background: isActive ? "#e0f2fe" : "#fff",
+                      elevation={isActive ? 3 : 0}
+                      sx={{
+                        p: 1,
+                        borderRadius: "10px",
+                        border: isActive
+                          ? "2px solid #0284c7"
+                          : "1px solid #d1d5db",
                         cursor: "pointer",
+                        bgcolor: isActive ? "#e0f2fe" : "#fff",
                       }}
+                      onClick={() => setGrid(item === "list" ? 1 : item)}
                     >
-                      {getIcon(item)}
-                    </button>
+                      {getIconComponent(item)}
+                    </Paper>
                   );
                 })}
-              </div>
-
-              <select
+              </Box>
+              {/* SORT SELECT */}
+              <Select
+                size="small"
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
+                sx={{
+                  minWidth: 150,
+                  borderRadius: "10px",
+                  fontSize: "15px",
                 }}
               >
-                <option value="">Default</option>
-                <option value="price_asc">Price Low → High</option>
-                <option value="price_desc">Price High → Low</option>
-                <option value="rating">Top Rating</option>
-              </select>
-            </div>
-          </div>
+                <MenuItem value="">Default</MenuItem>
+                <MenuItem value="price_asc">Price Low → High</MenuItem>
+                <MenuItem value="price_desc">Price High → Low</MenuItem>
+                <MenuItem value="rating">Top Rating</MenuItem>
+              </Select>
+            </Box>
+          </Box>
 
+          {/* ---------------- Selected Filter Pills ---------------- */}
           {selectedCategories.length > 0 && (
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
               {selectedCategories.map((id) => {
                 const cat = categories.find((c) => c.category_id === id);
                 return (
-                  <div
+                  <Paper
                     key={id}
-                    style={{
-                      padding: "6px 12px",
+                    sx={{
+                      px: 2,
+                      py: 1,
                       background: "#f3f4f6",
                       borderRadius: "20px",
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: 1,
                     }}
                   >
                     {cat?.name}
-                    <span onClick={() => removeCategory(id)} style={{ cursor: "pointer" }}>
+                    <span
+                      onClick={() => removeCategory(id)}
+                      style={{
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
                       ×
                     </span>
-                  </div>
+                  </Paper>
                 );
               })}
 
-              <span
+              <Typography
+                sx={{ color: "#0284c7", cursor: "pointer", fontWeight: 600 }}
                 onClick={clearAll}
-                style={{
-                  color: "#0284c7",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
               >
                 Clear All
-              </span>
-            </div>
+              </Typography>
+            </Box>
           )}
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: grid === 1 ? "1fr" : `repeat(${grid}, 1fr)`,
-              gap: "20px",
-              marginTop: "20px",
-            }}
+          {/* ---------------- PRODUCT GRID ---------------- */}
+          <Box
+            display="grid"
+            gridTemplateColumns={grid === 1 ? "1fr" : `repeat(${grid}, 1fr)`}
+            gap={3}
+            mt={3}
           >
             {products.map((p) => (
               <ProductCard
                 key={p.product_id}
                 product={{ ...p, images: p.staticImages }}
                 addToCart={addToCart}
-                onQuickView={setQuickViewProduct}  // ⬅️ QUICK VIEW HANDLER
+                onQuickView={setQuickViewProduct}
               />
             ))}
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
 
-      {/* ✅ QUICK VIEW MODAL RENDER */}
+      {/* ---------------- QUICK VIEW MODAL ---------------- */}
       {quickViewProduct && (
         <QuickViewModal
           product={quickViewProduct}
           onClose={() => setQuickViewProduct(null)}
         />
       )}
-    </div>
+    </Box>
   );
 }
 

@@ -9,7 +9,7 @@ import LandingPage from "./pages/LandingPage";
 import Footer from "./components/Footer";
 import FooterFeatures from "./components/FooterFeatures";
 import MobileSearch from "./components/MobileSearch";
-
+import { AuthProvider } from "./components/AuthContext";
 // Import the new pages for footer links
 import AboutUs from "./pages/static/AboutUs";
 import PrivacyPolicy from "./pages/static/PrivacyPolicy";
@@ -18,9 +18,18 @@ import ContactUs from "./pages/static/ContactUs";
 import RefundReturns from "./pages/static/RefundReturns";
 // import MyAccount from "./pages/MyAccount";
 // import TrackOrder from "./pages/TrackOrder";
-// import Wishlist from "./pages/Wishlist";
+import Wishlist from "./pages/Wishlist";
 import CartSidebar from "./components/CartSidebar";
+// import Login from "./pages/Login";
+// import Signup from "./pages/Signup";
+import Account from "./pages/Account";
+import ProtectedRoute from "./components/ProtectedRoutes";
+import LoginRequired from "./pages/LoginRequired";
 
+// ⭐ Add Wishlist Provider Import
+import { WishlistProvider } from "./components/WishlistContext";
+import Checkout from "./pages/Checkout";
+import Breadcrumbs from "./components/Breadcrumbs";
 function AppWrapper() {
   const { isSidebarOpen, closeSidebar } = useContext(CartContext);
   const location = useLocation();
@@ -31,10 +40,17 @@ function AppWrapper() {
   return (
     <>
       <Navbar />
+      
+      {/* Show breadcrumbs on all pages EXCEPT the homepage */}
+    {location.pathname !== "/" && !location.pathname.startsWith("/product") && (
+  <Breadcrumbs />
+)}
+
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/search" element={<MobileSearch />} />
 
@@ -47,6 +63,15 @@ function AppWrapper() {
         {/* <Route path="/my-account" element={<MyAccount />} />
         <Route path="/track-order" element={<TrackOrder />} />
         <Route path="/wishlist" element={<Wishlist />} /> */}
+
+        {/* Auth */}
+         {/* <Route path="/login" element={<Login />} /> 
+         <Route path="/signup" element={<Signup />} />  */}
+         {/* <Route path="/account" element={<Account />} />  */}
+         <Route path="/login-required" element={<LoginRequired />} />
+         <Route path="/account" element={ <ProtectedRoute> <Account /> </ProtectedRoute>}/>
+         <Route path="/checkout" element={<Checkout />}/>
+
       </Routes>
 
       {/* Render Cart Sidebar only if not on /cart page */}
@@ -60,11 +85,16 @@ function AppWrapper() {
 
 function App() {
   return (
-    <CartProvider>
-      <BrowserRouter>
-        <AppWrapper />
-      </BrowserRouter>
-    </CartProvider>
+    // ⭐ Wrap your whole app with WishlistProvider (added safely)
+    <AuthProvider>
+    <WishlistProvider>
+      <CartProvider>
+        <BrowserRouter>
+          <AppWrapper />
+        </BrowserRouter>
+      </CartProvider>
+    </WishlistProvider>
+    </AuthProvider>
   );
 }
 

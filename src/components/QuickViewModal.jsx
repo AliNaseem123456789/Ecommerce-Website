@@ -1,8 +1,11 @@
-import React from "react";
-import { FaTimes } from "react-icons/fa";
-import { FaStar } from "react-icons/fa";
+import React, { useContext, useState } from "react";
+import { FaTimes, FaRegStar, FaStar } from "react-icons/fa";
+import { WishlistContext } from "../components/WishlistContext";
 
 export default function QuickViewModal({ product, onClose }) {
+  const { wishlist, toggleWishlist } = useContext(WishlistContext);
+  const [hoverStar, setHoverStar] = useState(false);
+
   const id = product.product_id;
 
   const getLocalImage = (id) => {
@@ -13,23 +16,23 @@ export default function QuickViewModal({ product, onClose }) {
     }
   };
 
-  // ⭐ Generate proper 5-star rating UI
+  // ⭐ Generate proper 5-star UI for ratings
   const renderStars = (rating = 4.5) => {
     const fullStars = Math.floor(rating);
     const halfStar = rating % 1 !== 0;
-
     let stars = [];
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<FaStar key={i} size={18} color="#facc15" />); // yellow stars
+      stars.push(<FaStar key={i} size={18} color="#facc15" />);
     }
-
     if (halfStar) {
       stars.push(<FaStar key="half" size={18} color="#facc15" opacity={0.5} />);
     }
 
     return stars;
   };
+
+  const isWishlisted = wishlist.includes(id);
 
   return (
     <div
@@ -48,8 +51,8 @@ export default function QuickViewModal({ product, onClose }) {
     >
       <div
         style={{
-          width: "75%",           // reduced width
-          maxWidth: "900px",      // smaller modal
+          width: "75%",
+          maxWidth: "900px",
           background: "white",
           borderRadius: "12px",
           display: "flex",
@@ -83,12 +86,71 @@ export default function QuickViewModal({ product, onClose }) {
           />
         </div>
 
-        {/* RIGHT — DETAILS */}
+        {/* RIGHT — MAIN DETAILS */}
         <div style={{ flex: 1.4, paddingLeft: "10px" }}>
-          {/* Title */}
-          <h2 style={{ fontSize: "24px", marginBottom: "15px", fontWeight: 600 }}>
-            {product.name}
-          </h2>
+          {/* TITLE + WISH BUTTON */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "15px",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "24px",
+                fontWeight: 600,
+                margin: 0,
+                maxWidth: "80%",
+              }}
+            >
+              {product.name}
+            </h2>
+
+            {/* ⭐ WISHLIST BUTTON */}
+            <div
+              style={{
+                background: "white",
+                padding: "8px",
+                borderRadius: "50%",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                cursor: "pointer",
+                position: "relative",
+                transition: "0.2s",
+                transform: hoverStar ? "scale(1.1)" : "scale(1)",
+              }}
+              onMouseEnter={() => setHoverStar(true)}
+              onMouseLeave={() => setHoverStar(false)}
+              onClick={() => toggleWishlist(id)}
+            >
+              {/* Tooltip */}
+              {hoverStar && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-28px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    background: "black",
+                    color: "white",
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                </div>
+              )}
+
+              {isWishlisted ? (
+                <FaStar size={20} color="#facc15" />
+              ) : (
+                <FaRegStar size={20} color="gray" />
+              )}
+            </div>
+          </div>
 
           {/* PRICE + STARS */}
           <div
@@ -99,18 +161,14 @@ export default function QuickViewModal({ product, onClose }) {
               marginBottom: "20px",
             }}
           >
-            {/* PRICE */}
             <h3 style={{ fontSize: "22px", color: "#ef4444", margin: 0 }}>
               ${product.price}
             </h3>
 
-            {/* ⭐ RATING */}
             <div style={{ display: "flex", gap: "4px" }}>
               {renderStars(product.avg_rating)}
             </div>
           </div>
-
-        
         </div>
       </div>
     </div>

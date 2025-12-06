@@ -2,8 +2,13 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "./SupabaseClient";
 import { CartContext } from "../components/CartContext";
+import { WishlistContext } from "../components/WishlistContext"; // ⭐ ADDED
 import ReviewModal from "../components/ReviewModal";
 import QuestionModal from "../components/QuestionModal";
+import logo from "../assets/Logos/paycard2.png";
+import LiveViewers from "../components/LiveViewers";
+import Breadcrumbs from "../components/Breadcrumbs";
+
 
 // MUI
 import {
@@ -18,6 +23,10 @@ import {
   IconButton,
 } from "@mui/material";
 
+// Icons for Wishlist
+// import { FaStar, FaRegStar } from "react-icons/fa"; // ⭐ ADDED
+import { FaStar, FaRegStar, FaQuestionCircle, FaShareAlt } from "react-icons/fa";
+
 function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -31,6 +40,10 @@ function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
 
   const { addToCart } = useContext(CartContext);
+
+  // ⭐ Wishlist
+  const { wishlist, toggleWishlist } = useContext(WishlistContext);
+  const isWishlisted = wishlist.includes(Number(id));
 
   useEffect(() => {
     fetchProduct();
@@ -98,6 +111,7 @@ function ProductDetails() {
   if (!product)
     return <p style={{ textAlign: "center", marginTop: "50px" }}>Loading...</p>;
 
+
   const modernButtonStyles = {
     borderRadius: "50px",
     textTransform: "none",
@@ -106,7 +120,9 @@ function ProductDetails() {
   };
 
   return (
+    
     <Box sx={{ maxWidth: 1300, mx: "auto", p: 3 }}>
+      <Breadcrumbs productName={product.name} />
       {/* TOP SECTION */}
       <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
         {/* LEFT IMAGE SECTION */}
@@ -154,40 +170,44 @@ function ProductDetails() {
 
         {/* RIGHT PRODUCT INFO */}
         <Box sx={{ flex: "1 1 300px", minWidth: 280 }}>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
-            {product.name}
-          </Typography>
+
+          {/* ⭐ PRODUCT TITLE + WISHLIST ⭐ */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="h4" fontWeight={700}>
+              {product.name}
+            </Typography>
+
+            {/* Wishlist Button */}
+            <IconButton
+              onClick={() => toggleWishlist(product.product_id)}
+              sx={{
+                color: isWishlisted ? "#facc15" : "gray",
+                transition: "0.2s",
+                "&:hover": { transform: "scale(1.1)", color: "black" },
+              }}
+            >
+              {isWishlisted ? (
+                <FaStar size={22} color="#facc15" />
+              ) : (
+                <FaRegStar size={22} />
+              )}
+            </IconButton>
+          </Box>
 
           <Typography variant="h5" fontWeight={700} color="primary" gutterBottom>
             ${product.price}
           </Typography>
+          
 
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
             <Rating value={product.avg_rating || 0} precision={0.5} readOnly />
             <Typography>({reviews.length} reviews)</Typography>
           </Stack>
+          <LiveViewers />
 
           {/* QUANTITY + ADD TO CART BUTTONS */}
           <Box sx={{ mb: 3 }}>
-            {/* <Typography fontWeight={600} sx={{ mb: 1 }}>Quantity</Typography> */}
             <Stack direction="row" spacing={2} alignItems="center">
-              {/* Quantity Buttons */}
-              {/* <Stack
-                direction="row"
-                alignItems="center"
-                sx={{
-                  background: "#f3f3f3",
-                  borderRadius: "50px",
-                  height: 52,
-                  px: 2,
-                  gap: 1,
-                }}
-              > */}
-                {/* <IconButton onClick={() => setQuantity(Math.max(1, quantity - 1))}>–</IconButton>
-                <Typography fontWeight={600}>{quantity}</Typography>
-                <IconButton onClick={() => setQuantity(quantity + 1)}>+</IconButton> */}
-              {/* </Stack> */}
-
               {/* Add to Cart */}
               <Button
                 fullWidth
@@ -218,10 +238,131 @@ function ProductDetails() {
             >
               BUY NOW
             </Button>
+
+            {/* --- ACTION BUTTON ROW (Wishlist / Ask / Share) --- */}
+<Box
+  sx={{
+    display: "flex",
+    justifyContent: "space-between",
+    mt: 3,
+    mb: 3,
+    flexWrap: "wrap",
+  }}
+>
+  {/* ⭐ Wishlist */}
+  <Box
+    onClick={() => toggleWishlist(product.product_id)}
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+      cursor: "pointer",
+      px: 2,
+      py: 1,
+      borderRadius: "25px",
+      transition: "0.2s",
+      "&:hover": { background: "#f3f4f6" },
+    }}
+  >
+    {isWishlisted ? (
+      <FaStar size={20} color="black" />
+    ) : (
+      <FaRegStar size={20} color="black" />
+    )}
+    <Typography
+      sx={{
+        fontSize: 15,
+        fontWeight: 600,
+        color: "black",
+      }}
+    >
+      Wishlist
+    </Typography>
+  </Box>
+
+  {/* ❓ Ask a Question */}
+  <Box
+    onClick={() => setShowQuestionModal(true)}
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+      cursor: "pointer",
+      px: 2,
+      py: 1,
+      borderRadius: "25px",
+      transition: "0.2s",
+      "&:hover": { background: "#f3f4f6" },
+    }}
+  >
+    <FaQuestionCircle size={20} color="black" />
+    <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Ask a Question</Typography>
+  </Box>
+
+  {/* 🔗 Share */}
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+      cursor: "pointer",
+      px: 2,
+      py: 1,
+      borderRadius: "25px",
+      transition: "0.2s",
+      "&:hover": { background: "#f3f4f6" },
+    }}
+    onClick={() => navigator.share?.({ title: product.name })}
+  >
+    <FaShareAlt size={20} color="black" />
+    <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Share</Typography>
+  </Box>
+</Box>
+
+{/* --- DIVIDER LINE --- */}
+<Box sx={{ borderBottom: "1px solid #e5e7eb", my: 2 }} />
+
+{/* --- ESTIMATED DELIVERY --- */}
+<Box sx={{ mt: 2, mb: 3 }}>
+  <Typography sx={{ fontSize: 16, fontWeight: 600 }}>
+    Estimated Delivery:
+  </Typography>
+  <Typography sx={{ fontSize: 15, color: "gray" }}>
+    04 - 11 Dec, 2025
+  </Typography>
+</Box>
+
+{/* --- PAYMENT LOGOS WITH GRAY BACKGROUND --- */}
+<Box
+  sx={{
+    background: "#f3f4f6",
+    borderRadius: "12px",
+    p: 2,
+    textAlign: "center",
+    width: "100%",
+  }}
+>
+  <img
+    src={logo}
+    alt="Payment Methods"
+    style={{
+      width: "220px",
+      height: "auto",
+      marginBottom: "8px",
+    }}
+  />
+  <Typography sx={{ fontSize: 14, color: "#555" }}>
+    Guaranteed safe & secure checkout
+  </Typography>
+</Box>
+
           </Box>
+
         </Box>
       </Box>
 
+      
+     
       {/* TABS SECTION */}
       <Box sx={{ mt: 6 }}>
         <Tabs

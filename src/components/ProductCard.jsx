@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import { FaEye, FaBalanceScale, FaRegStar } from "react-icons/fa";
+import { FaEye, FaBalanceScale, FaRegStar, FaStar } from "react-icons/fa";
+import { WishlistContext } from "../components/WishlistContext";
 
 export default function ProductCard({ product, addToCart, onQuickView }) {
   const [hover, setHover] = useState(false);
   const [iconHover, setIconHover] = useState(null);
 
+  const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const id = product.product_id;
 
   const getLocalImage = (id) => {
@@ -16,7 +18,9 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
     }
   };
 
-  const iconStyle = (name) => ({
+  const isWishlisted = wishlist.includes(id);
+
+  const iconStyle = (name, active = false) => ({
     background: "white",
     padding: "8px",
     borderRadius: "50%",
@@ -25,7 +29,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
     cursor: "pointer",
     transform: iconHover === name ? "scale(1.1)" : "scale(1)",
     transition: "0.2s",
-    color: iconHover === name ? "black" : "gray",
+    color: active ? "#facc15" : iconHover === name ? "black" : "gray",
   });
 
   const tooltipStyle = {
@@ -40,6 +44,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
     fontSize: "12px",
     whiteSpace: "nowrap",
     zIndex: 10,
+    fontFamily: "Inter, sans-serif",
   };
 
   return (
@@ -49,9 +54,10 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         width: "100%",
         cursor: "pointer",
         background: "white",
-        borderRadius: "16px",
+        borderRadius: "18px",
         transition: "0.3s",
-        boxShadow: hover ? "0 4px 12px rgba(0,0,0,0.12)" : "none",
+        boxShadow: hover ? "0 8px 16px rgba(0,0,0,0.12)" : "0 2px 6px rgba(0,0,0,0.05)",
+        fontFamily: "Inter, Poppins, sans-serif",
       }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => {
@@ -59,13 +65,13 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         setIconHover(null);
       }}
     >
-      {/* Hover Icons */}
+      {/* HOVER ICONS */}
       {hover && (
         <div
           style={{
             position: "absolute",
-            top: "10px",
-            right: "10px",
+            top: "12px",
+            right: "12px",
             display: "flex",
             gap: "10px",
             zIndex: 10,
@@ -77,13 +83,11 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             onMouseEnter={() => setIconHover("compare")}
             onMouseLeave={() => setIconHover(null)}
           >
-            {iconHover === "compare" && (
-              <div style={tooltipStyle}>Compare</div>
-            )}
+            {iconHover === "compare" && <div style={tooltipStyle}>Compare</div>}
             <FaBalanceScale size={16} />
           </div>
 
-          {/* QUICK VIEW — new code added here */}
+          {/* QUICK VIEW */}
           <div
             style={iconStyle("quick")}
             onMouseEnter={() => setIconHover("quick")}
@@ -93,31 +97,38 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
               onQuickView(product);
             }}
           >
-            {iconHover === "quick" && (
-              <div style={tooltipStyle}>Quick View</div>
-            )}
+            {iconHover === "quick" && <div style={tooltipStyle}>Quick View</div>}
             <FaEye size={16} />
           </div>
 
           {/* WISHLIST */}
           <div
-            style={iconStyle("wishlist")}
+            style={iconStyle("wishlist", isWishlisted)}
             onMouseEnter={() => setIconHover("wishlist")}
             onMouseLeave={() => setIconHover(null)}
+            onClick={(e) => {
+              e.preventDefault();
+              toggleWishlist(id);
+            }}
           >
             {iconHover === "wishlist" && (
-              <div style={tooltipStyle}>Add to Wishlist</div>
+              <div style={tooltipStyle}>
+                {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              </div>
             )}
-            <FaRegStar size={16} />
+
+            {isWishlisted ? <FaStar size={16} color="#facc15" /> : <FaRegStar size={16} />}
           </div>
         </div>
       )}
 
+      {/* PRODUCT LINK */}
       <Link
         to={`/product/${id}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <div>
+          {/* IMAGE */}
           <div
             style={{
               width: "100%",
@@ -142,16 +153,17 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             />
           </div>
 
+          {/* TEXT CONTENT */}
           <div style={{ padding: "16px" }}>
-            {/* CATEGORY NAME */}
+            {/* CATEGORY */}
             <p
               style={{
                 fontSize: "12px",
-                fontWeight: 400,
+                fontWeight: 500,
                 color: "#6b7280",
-                marginBottom: "4px",
+                marginBottom: "6px",
+                letterSpacing: "0.8px",
                 textTransform: "uppercase",
-                letterSpacing: "0.5px",
               }}
             >
               {product.categoryName || "Uncategorized"}
@@ -160,16 +172,16 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             {/* PRODUCT NAME */}
             <h3
               style={{
-                fontSize: "18px",
+                fontSize: "17px",
                 fontWeight: 600,
-                color: "#111",
+                color: "#1f2937",
+                lineHeight: "1.35",
                 marginBottom: "8px",
+                fontFamily: "Poppins, sans-serif",
                 display: "-webkit-box",
-                WebkitLineClamp: 3,
+                WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textOverflow: "ellipsis",
-                minHeight: "48px",
               }}
             >
               {product.name}
@@ -178,11 +190,10 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             {/* PRICE */}
             <p
               style={{
-                fontSize: "16px",
-                fontWeight: 400,
+                fontSize: "18px",
+                fontWeight: 600,
                 color: "#ef4444",
                 margin: 0,
-                fontFamily: "Inter, Poppins, sans-serif",
               }}
             >
               ${product.price}
@@ -191,7 +202,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         </div>
       </Link>
 
-      {/* Add to Cart */}
+      {/* ADD TO CART BUTTON */}
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -199,16 +210,18 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         }}
         style={{
           position: "absolute",
-          bottom: "12px",
-          right: "12px",
-          background: "black",
+          bottom: "14px",
+          right: "14px",
+          background: "#111",
           color: "white",
-          padding: "10px 18px",
+          padding: "10px 20px",
           fontSize: "14px",
-          borderRadius: "8px",
+          borderRadius: "10px",
           opacity: hover ? 1 : 0,
           transition: "0.3s",
           pointerEvents: hover ? "auto" : "none",
+          fontWeight: 500,
+          fontFamily: "Inter, sans-serif",
         }}
       >
         Add to Cart

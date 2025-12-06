@@ -196,19 +196,26 @@ export default function CartSidebar({ onClose }) {
           </div>
 
           <button
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: "22px",
-              background: "black",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer",
-              marginBottom: "10px",
-            }}
-          >
-            CHECKOUT
-          </button>
+  onClick={() => {
+    onClose();          // close sidebar
+    navigate("/checkout"); // go to checkout page
+  }}
+  style={{
+    width: "100%",
+    padding: "12px",
+    borderRadius: "22px",
+    background: "black",
+    color: "white",
+    fontWeight: "bold",
+    cursor: "pointer",
+    marginBottom: "10px",
+  }}
+>
+  CHECKOUT
+</button>
+
+
+
 
           <button
             onClick={() => {

@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
 import { CartContext } from "../components/CartContext";
 import { Pencil, Truck, Ticket } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 export default function Cart() {
   const { cartItems, updateQuantity, removeFromCart } = useContext(CartContext);
-
+ const navigate = useNavigate();
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.products.price * item.quantity,
     0
@@ -252,6 +252,7 @@ export default function Cart() {
             </div>
 
             <button
+            onClick={()=>navigate("/checkout")}
               style={{
                 width: "100%",
                 padding: "12px",

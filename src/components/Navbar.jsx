@@ -1,31 +1,30 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  FaUser,
-  FaStar,
-  FaShoppingCart,
-  FaSearch,
-  FaBars,
-  FaHome,
-  FaStore,
-  FaTimes,
-  FaChevronDown,
-  FaChevronUp,
+FaUser,FaStar,FaShoppingCart,FaSearch, FaBars, FaHome, FaStore, FaTimes, FaChevronDown,FaChevronUp,
 } from "react-icons/fa";
 import { supabase } from "../pages/SupabaseClient";
 import logo from "../assets/Logos/logo2.png";
 import { CartContext } from "../components/CartContext";
 import CartSidebar from "../components/CartSidebar";
+import { WishlistContext } from "../components/WishlistContext";
+import { AuthContext } from "../components/AuthContext";
+import AuthModal from "../components/AuthModal"; // New modal
 
 function Navbar() {
   const navigate = useNavigate();
   const { totalItems } = useContext(CartContext);
+  const { wishlist } = useContext(WishlistContext);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  
+  const { user, setUser } = useContext(AuthContext);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
 
   // Handle window resize
   useEffect(() => {
@@ -49,6 +48,16 @@ function Navbar() {
     setDropdownOpen(false);
     setSidebarOpen(false);
   };
+
+  // ⭐ ADDED: Cart click handler to prevent sidebar on cart page
+  const handleCartClick = () => {
+    if (window.location.pathname === "/cart") {
+      window.scrollTo(0, 0);
+    } else {
+      setCartOpen(true);
+    }
+  };
+
 
   return (
     <div style={{ width: "100%", fontFamily: "Arial, sans-serif" }}>
@@ -91,6 +100,30 @@ function Navbar() {
               </div>
             </div>
 
+
+{user && (
+  <button
+    style={{
+      marginRight:"20px",
+      marginLeft: "10px",
+      padding: "6px 12px",
+      border: "none",
+      background: "#f44336",
+      color: "white",
+      borderRadius: "4px",
+      cursor: "pointer",
+      fontSize: "14px"
+    }}
+    onClick={async () => {
+      await supabase.auth.signOut();
+      setUser(null);
+    }}
+  >
+    Logout
+  </button>
+)}
+
+
             <div
               style={{
                 display: "flex",
@@ -99,13 +132,48 @@ function Navbar() {
                 position: "relative",
               }}
             >
-              <FaUser style={{ cursor: "pointer" }} title="Account" />
-              <FaStar style={{ cursor: "pointer" }} title="Wishlist" />
+             <FaUser
+  style={{ cursor: "pointer" }}
+  title="Account"
+  onClick={() => {
+    if (!user) setShowAuthModal(true);
+    else navigate("/account");
+  }}
+/>
+
               <div style={{ position: "relative" }}>
+                <FaStar
+                  style={{ cursor: "pointer" }}
+                  title="Wishlist"
+
+                  onClick={() => navigate("/wishlist")}
+/>
+
+                {wishlist.length > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "-10px",
+                      background: "red",
+                      color: "white",
+                      borderRadius: "50%",
+                      padding: "2px 6px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {wishlist.length}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ position: "relative" }}>
+                {/* ⭐ UPDATED: Use handleCartClick */}
                 <FaShoppingCart
                   style={{ cursor: "pointer" }}
                   title="Cart"
-                  onClick={() => setCartOpen(true)}
+                  onClick={handleCartClick}
                 />
                 {totalItems > 0 && (
                   <span
@@ -148,49 +216,6 @@ function Navbar() {
               >
                 Shop
               </Link>
-
-              {/* Categories Dropdown */}
-              {/* <div
-                style={{ position: "relative", cursor: "pointer" }}
-                onMouseEnter={() => setDropdownOpen(true)}
-                onMouseLeave={() => setDropdownOpen(false)}
-              >
-                <span style={{ color: "white", fontWeight: "500" }}>
-                  All Categories ▼
-                </span>
-
-                {dropdownOpen && (
-                  <ul
-                    style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      background: "white",
-                      color: "#111",
-                      borderRadius: "6px",
-                      listStyle: "none",
-                      padding: "8px 0",
-                      margin: 0,
-                      minWidth: "180px",
-                      boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-                      zIndex: 100,
-                    }}
-                  >
-                    {categories.map((cat) => (
-                      <li
-                        key={cat.category_id}
-                        onClick={() => handleCategoryClick(cat.category_id)}
-                        style={{
-                          padding: "8px 16px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {cat.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div> */}
 
               <Link
                 to="/about"
@@ -240,9 +265,10 @@ function Navbar() {
             />
 
             <div style={{ position: "relative" }}>
+              {/* ⭐ UPDATED: Use handleCartClick */}
               <FaShoppingCart
                 style={{ fontSize: "24px", cursor: "pointer" }}
-                onClick={() => setCartOpen(true)}
+                onClick={handleCartClick}
               />
               {totalItems > 0 && (
                 <span
@@ -419,7 +445,7 @@ function Navbar() {
           </div>
 
           <div
-            onClick={() => setCartOpen(true)}
+            onClick={handleCartClick} 
             style={{
               display: "flex",
               flexDirection: "column",
@@ -448,29 +474,18 @@ function Navbar() {
             )}
             <span style={{ fontSize: "12px" }}>Cart</span>
           </div>
-
-          <div
-            onClick={() => navigate("/wishlist")}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              cursor: "pointer",
-            }}
-          >
-            <FaStar size={22} />
-            <span style={{ fontSize: "12px" }}>Wishlist</span>
-          </div>
         </div>
       )}
-
       {/* Spacer for Mobile */}
       {isMobile && <div style={{ height: "56px" }}></div>}
 
       {/* Cart Sidebar */}
       {cartOpen && <CartSidebar onClose={() => setCartOpen(false)} />}
-    </div>
-  );
-}
+
+ {/* Auth modal */}
+        {showAuthModal && (
+  <AuthModal onClose={() => setShowAuthModal(false)} />
+)}
+    </div>);}
 
 export default Navbar;
