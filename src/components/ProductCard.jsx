@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaEye, FaBalanceScale, FaRegStar, FaStar } from "react-icons/fa";
 import { WishlistContext } from "../components/WishlistContext";
@@ -10,31 +10,21 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const id = product.product_id;
 
-  // ✅ Load ALL available images
-  const loadImages = (id) => {
-    const tryPaths = [
-      `/src/assets/products/${id}.jpeg`,
-      `/src/assets/products/${id}-1.jpeg`,
-      `/src/assets/products/${id}-2.jpeg`,
-      `/src/assets/products/${id}-3.jpeg`,
+  // ✅ Load images from /public/products (Vercel safe)
+  const images = useMemo(() => {
+    const paths = [
+      `/products/${id}.jpeg`,
+      `/products/${id}-1.jpeg`,
+      `/products/${id}-2.jpeg`,
+      `/products/${id}-3.jpeg`,
     ];
 
-    const images = [];
+    // We always return all paths; browser decides which exist
+    // If an image doesn't exist, browser skips it (no crash)
+    return paths;
+  }, [id]);
 
-    tryPaths.forEach((path) => {
-      try {
-        images.push(new URL(path, import.meta.url).href);
-      } catch {}
-    });
-
-    return images.length > 0
-      ? images
-      : ["https://via.placeholder.com/300"];
-  };
-
-  const images = loadImages(id);
-
-  // For hover image
+  // Hover image: show 2nd image if available
   const displayedImage = hover && images.length > 1 ? images[1] : images[0];
 
   const isWishlisted = wishlist.includes(id);
@@ -155,12 +145,14 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              transition: "0.3s",
             }}
           >
             <img
               src={displayedImage}
               alt={product.name}
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/300";
+              }}
               style={{
                 width: "100%",
                 height: "100%",
