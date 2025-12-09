@@ -1,3 +1,4 @@
+// ProductCard.jsx
 import React, { useState, useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaEye, FaBalanceScale, FaRegStar, FaStar } from "react-icons/fa";
@@ -10,29 +11,26 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const id = product.product_id;
 
-  // ✅ UNIVERSAL IMAGE LOADER (Vercel + Vite Compatible)
-  const resolveImage = (path) => {
+  // ✅ VITE COMPATIBLE IMAGE LOADER
+  const resolveImage = (id, index = 0) => {
     try {
-      // When running locally with Vite:
-      return new URL(path, import.meta.url).href;
+      return new URL(
+        `../assets/products/${id}${index ? `-${index}` : ""}.jpeg`,
+        import.meta.url
+      ).href;
     } catch {
-      // On Vercel / production:
-      return path.replace("/src", "");
+      return "https://via.placeholder.com/300";
     }
   };
 
-  // ✅ Build all possible image paths using your naming system
-  const images = useMemo(() => {
-    return [
-      resolveImage(`/src/assets/products/${id}.jpeg`),
-      resolveImage(`/src/assets/products/${id}-1.jpeg`),
-      resolveImage(`/src/assets/products/${id}-2.jpeg`),
-      resolveImage(`/src/assets/products/${id}-3.jpeg`),
-    ];
-  }, [id]);
+  // ✅ Build all possible image paths
+  const images = useMemo(
+    () => [0, 1, 2, 3].map((i) => resolveImage(id, i)),
+    [id]
+  );
 
-  // Show 2nd image on hover (if it exists)
-  const displayedImage = hover && images.length > 1 ? images[1] : images[0];
+  // Show 2nd image on hover if exists
+  const displayedImage = hover && images[1] ? images[1] : images[0];
 
   const isWishlisted = wishlist.includes(id);
 
@@ -83,7 +81,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         setIconHover(null);
       }}
     >
-
       {/* HOVER ICONS */}
       {hover && (
         <div
@@ -135,11 +132,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
                 {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
               </div>
             )}
-            {isWishlisted ? (
-              <FaStar size={16} color="#facc15" />
-            ) : (
-              <FaRegStar size={16} />
-            )}
+            {isWishlisted ? <FaStar size={16} color="#facc15" /> : <FaRegStar size={16} />}
           </div>
         </div>
       )}
@@ -147,7 +140,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
       {/* PRODUCT LINK */}
       <Link to={`/product/${id}`} style={{ textDecoration: "none", color: "inherit" }}>
         <div>
-
           {/* PRODUCT IMAGE */}
           <div
             style={{
