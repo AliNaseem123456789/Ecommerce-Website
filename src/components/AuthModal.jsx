@@ -13,21 +13,22 @@ export default function AuthModal({ onClose }) {
   const [name, setName] = useState("");
 
   const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    if (error) return alert(error.message);
+  if (error) return alert(error.message);
 
-    if (mergeCart && guestId) {
-      await mergeCart(guestId, data.user.id);
-    }
+  if (mergeCart && guestId) {
+    await mergeCart(guestId, data.user.id);
+  }
 
-    setUser(data.user);
-     window.location.reload();
-    onClose();
-  };
+  setUser(data.user);
+
+  // Call onClose with "loggedIn = true" so LandingNavbar can navigate
+  onClose(true);
+};
 
   const handleSignup = async () => {
   const { data, error } = await supabase.auth.signUp({

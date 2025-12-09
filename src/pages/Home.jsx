@@ -150,8 +150,6 @@ export default function Home() {
 
     
     <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      
-
       {/* CATEGORY FILTER TABS */}
       <section style={{ marginTop: 30 }}>
         <div style={styles.tabsWrapper}>

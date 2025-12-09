@@ -218,7 +218,7 @@ function Navbar() {
               </Link>
 
               <Link
-                to="/about"
+                to="/about-us"
                 style={{ color: "white", textDecoration: "none" }}
               >
                 About Us
@@ -391,7 +391,7 @@ function Navbar() {
               Wishlist
             </Link> */}
             <Link
-              to="/about"
+              to="/about-us"
               onClick={() => setSidebarOpen(false)}
               style={{ textDecoration: "none", color: "#111" }}
             >

@@ -30,6 +30,7 @@ import Home from "./pages/Home"
 import { WishlistProvider } from "./components/WishlistContext";
 import Checkout from "./pages/Checkout";
 import Breadcrumbs from "./components/Breadcrumbs";
+import NotFoundPage from "./pages/NotFoundPage";
 function AppWrapper() {
   const { isSidebarOpen, closeSidebar } = useContext(CartContext);
   const location = useLocation();
@@ -64,6 +65,7 @@ function AppWrapper() {
         <Route path="/refund-returns" element={<RefundReturns />} />
         <Route path="/Account" element={<Account />}/>
         <Route path="/track-order" element={<Account />} />
+        <Route path="/NotFoundPage" element={<NotFoundPage />} />
         {/* // <Route path="/wishlist" element={<Wishlist />} />  */}
 
         {/* Auth */}

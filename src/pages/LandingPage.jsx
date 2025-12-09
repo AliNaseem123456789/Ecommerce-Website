@@ -132,18 +132,21 @@ export default function LandingPage() {
         title: "Discover legance for Every Moment",
         subtitle: "Premium Products, Delivered With Love",
         description: "Our thoughtfully curated items elevate your lifestyle."
+      , productId: 25
       },
       {
         image: product2,
         title: "Luxury Meets Comfort",
         subtitle: "Handpicked Items for Your Home",
-        description: "Transform your living space into a masterpiece."
+        description: "Transform your living space into a masterpiece.",
+         productId: 31 
       },
       {
         image: product3,
         title: "Style That Inspires",
         subtitle: "Modern Designs for Modern Living",
-        description: "Experience beauty, quality, and elegance."
+        description: "Experience beauty, quality, and elegance.",
+         productId: 30 
       }
     ]}
   />
@@ -209,12 +212,12 @@ export default function LandingPage() {
 
         {filteredProducts.length > 0 ? (
           <>
-            <button style={styles.arrowLeft} onClick={handlePrev}>
+            {/* <button style={styles.arrowLeft} onClick={handlePrev}>
               ◀
             </button>
             <button style={styles.arrowRight} onClick={handleNext}>
               ▶
-            </button>
+            </button> */}
 
             <div style={styles.sliderRow}>
               {getVisibleProducts().map((product) => (

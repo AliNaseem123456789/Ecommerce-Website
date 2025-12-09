@@ -3,6 +3,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../components/AuthContext";
 import { CartContext } from "../components/CartContext";
 import { supabase } from "./SupabaseClient";
+import { useNavigate } from "react-router-dom";
 
 import {
   Box,
@@ -42,6 +43,7 @@ export default function Checkout() {
   // 1 -> Shipping open
   // 2 -> Payment open
   const [activeStep, setActiveStep] = useState(0);
+const navigate = useNavigate();
 
   // Track which steps are completed / collapsed
   const [completed, setCompleted] = useState({
@@ -618,7 +620,9 @@ export default function Checkout() {
             <Button
               fullWidth
               variant="contained"
-              onClick={placeOrder}
+              // onClick={placeOrder}
+             onClick={() => navigate("/NotFoundPage")}
+
               disabled={loading}
               sx={{ mt: 2, background: "#e60023", ":hover": { background: "#c4001d" }, textTransform: "none" }}
             >

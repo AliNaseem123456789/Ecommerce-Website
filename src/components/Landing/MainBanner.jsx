@@ -81,12 +81,12 @@ export default function MainBanner({ heroImages }) {
 
             {/* BUTTONS */}
             <div style={styles.buttonRow}>
-              <button
-                style={styles.primaryButton}
-                onClick={() => navigate("/shop")}
-              >
-                Shop Now
-              </button>
+             <button
+  style={styles.primaryButton}
+  onClick={() => navigate(`/product/${heroImages[currentHero].productId}`)}
+>
+  Shop Now
+</button>
               <button
                 style={styles.secondaryButton}
                 onClick={() => navigate("/shop")}
