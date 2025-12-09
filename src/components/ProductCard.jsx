@@ -51,7 +51,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
       imageUrls.push("https://via.placeholder.com/300");
     }
     
-    console.log(`Product ${id} - Images found:`, imageUrls.length, imageUrls); // Debug
+    // console.log(`Product ${id} - Images found:`, imageUrls.length, imageUrls); // Debug
     return imageUrls;
   }, [id]);
 
@@ -182,8 +182,8 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
               position: "relative", // Added for debugging
             }}
           >
-            {/* DEBUG INFO - Remove after testing */}
-            <div style={{
+            DEBUG INFO - Remove after testing
+            {/* <div style={{
               position: "absolute",
               top: "5px",
               left: "5px",
@@ -196,7 +196,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
               display: hover ? "block" : "none",
             }}>
               {images.length > 1 ? `Hover: ${images[1]}` : "No hover image"}
-            </div>
+            </div> */}
             
             <img
               src={displayedImage}
