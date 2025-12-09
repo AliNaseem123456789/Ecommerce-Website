@@ -33,7 +33,10 @@ import LockIcon from "@mui/icons-material/Lock";
 import AddCardIcon from "@mui/icons-material/CreditCard";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import PaymentIcon from "@mui/icons-material/Payment";
-
+import paypal from "../assets/Logos/Paypal.jpeg"
+import karna from "../assets/Logos/karna.jpeg"
+import afterpay from "../assets/Logos/afterpay.jpeg"
+import venmo from "../assets/Logos/VENMO.png"
 export default function Checkout() {
   const { user } = useContext(AuthContext);
   const { cartItems, clearCart } = useContext(CartContext);
@@ -494,10 +497,10 @@ const navigate = useNavigate();
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     >
-                      <FormControlLabel value="paypal" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src="/src/assets/paypal.png" alt="paypal" style={{ height: 22 }} /> Pay with PayPal</Box>} />
-                      <FormControlLabel value="venmo" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src="/src/assets/venmo.png" alt="venmo" style={{ height: 22 }} /> Pay with Venmo</Box>} />
-                      <FormControlLabel value="klarna" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src="/src/assets/klarna.png" alt="klarna" style={{ height: 22 }} /> Klarna</Box>} />
-                      <FormControlLabel value="afterpay" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src="/src/assets/afterpay.png" alt="afterpay" style={{ height: 22 }} /> Afterpay</Box>} />
+                      <FormControlLabel value="paypal" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src={paypal} alt="paypal" style={{ height: 22 }} /> Pay with PayPal</Box>} />
+                      <FormControlLabel value="venmo" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src={venmo} alt="venmo" style={{ height: 22 }} /> Pay with Venmo</Box>} />
+                      <FormControlLabel value="klarna" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src={karna} alt="klarna" style={{ height: 22 }} /> Klarna</Box>} />
+                      <FormControlLabel value="afterpay" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><img src={afterpay} alt="afterpay" style={{ height: 22 }} /> Afterpay</Box>} />
                       <FormControlLabel value="card" control={<Radio />} label={<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}><AddCardIcon /> Credit / Debit Card</Box>} />
                     </RadioGroup>
                   </FormControl>
