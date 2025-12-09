@@ -16,7 +16,8 @@ import hero6 from "../assets/banners/hero6.jpeg";
 import hero7 from "../assets/banners/hero7.jpeg";
 
 import product1 from "../assets/banners/product1banner.png"
-
+import product2 from "../assets/banners/product2banner.png"
+import product3 from "../assets/banners/product3banner.png"
 
 import SideBySide from "../components/Landing/SideBySide";
 import LandingNavbar from "../components/Landing/LandingNavbar";
@@ -133,13 +134,13 @@ export default function LandingPage() {
         description: "Our thoughtfully curated items elevate your lifestyle."
       },
       {
-        image: hero4,
+        image: product2,
         title: "Luxury Meets Comfort",
         subtitle: "Handpicked Items for Your Home",
         description: "Transform your living space into a masterpiece."
       },
       {
-        image: hero5,
+        image: product3,
         title: "Style That Inspires",
         subtitle: "Modern Designs for Modern Living",
         description: "Experience beauty, quality, and elegance."
