@@ -10,21 +10,28 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const id = product.product_id;
 
-  // ✅ Load images from /public/products (Vercel safe)
-  const images = useMemo(() => {
-    const paths = [
-      `/products/${id}.jpeg`,
-      `/products/${id}-1.jpeg`,
-      `/products/${id}-2.jpeg`,
-      `/products/${id}-3.jpeg`,
-    ];
+  // ✅ UNIVERSAL IMAGE LOADER (Vercel + Vite Compatible)
+  const resolveImage = (path) => {
+    try {
+      // When running locally with Vite:
+      return new URL(path, import.meta.url).href;
+    } catch {
+      // On Vercel / production:
+      return path.replace("/src", "");
+    }
+  };
 
-    // We always return all paths; browser decides which exist
-    // If an image doesn't exist, browser skips it (no crash)
-    return paths;
+  // ✅ Build all possible image paths using your naming system
+  const images = useMemo(() => {
+    return [
+      resolveImage(`/src/assets/products/${id}.jpeg`),
+      resolveImage(`/src/assets/products/${id}-1.jpeg`),
+      resolveImage(`/src/assets/products/${id}-2.jpeg`),
+      resolveImage(`/src/assets/products/${id}-3.jpeg`),
+    ];
   }, [id]);
 
-  // Hover image: show 2nd image if available
+  // Show 2nd image on hover (if it exists)
   const displayedImage = hover && images.length > 1 ? images[1] : images[0];
 
   const isWishlisted = wishlist.includes(id);
@@ -76,6 +83,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         setIconHover(null);
       }}
     >
+
       {/* HOVER ICONS */}
       {hover && (
         <div
@@ -88,6 +96,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             zIndex: 10,
           }}
         >
+          {/* COMPARE */}
           <div
             style={iconStyle("compare")}
             onMouseEnter={() => setIconHover("compare")}
@@ -97,6 +106,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             <FaBalanceScale size={16} />
           </div>
 
+          {/* QUICK VIEW */}
           <div
             style={iconStyle("quick")}
             onMouseEnter={() => setIconHover("quick")}
@@ -110,6 +120,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             <FaEye size={16} />
           </div>
 
+          {/* WISHLIST */}
           <div
             style={iconStyle("wishlist", isWishlisted)}
             onMouseEnter={() => setIconHover("wishlist")}
@@ -124,7 +135,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
                 {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
               </div>
             )}
-
             {isWishlisted ? (
               <FaStar size={16} color="#facc15" />
             ) : (
@@ -137,7 +147,8 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
       {/* PRODUCT LINK */}
       <Link to={`/product/${id}`} style={{ textDecoration: "none", color: "inherit" }}>
         <div>
-          {/* IMAGE */}
+
+          {/* PRODUCT IMAGE */}
           <div
             style={{
               width: "100%",
@@ -145,6 +156,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              transition: "0.3s",
             }}
           >
             <img
@@ -164,7 +176,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             />
           </div>
 
-          {/* TEXT */}
+          {/* PRODUCT INFO */}
           <div style={{ padding: "16px" }}>
             <p
               style={{
@@ -210,7 +222,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         </div>
       </Link>
 
-      {/* ADD TO CART */}
+      {/* ADD TO CART BUTTON */}
       <button
         onClick={(e) => {
           e.preventDefault();
