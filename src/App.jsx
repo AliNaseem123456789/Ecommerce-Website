@@ -25,7 +25,7 @@ import CartSidebar from "./components/CartSidebar";
 import Account from "./pages/Account";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import LoginRequired from "./pages/LoginRequired";
-
+import Home from "./pages/Home"
 // ⭐ Add Wishlist Provider Import
 import { WishlistProvider } from "./components/WishlistContext";
 import Checkout from "./pages/Checkout";
@@ -39,15 +39,17 @@ function AppWrapper() {
 
   return (
     <>
-      <Navbar />
+    {location.pathname !=="/" && !location.pathname.startsWith("/products") &&( <Navbar />)}
+     
       
-      {/* Show breadcrumbs on all pages EXCEPT the homepage */}
-    {location.pathname !== "/" && !location.pathname.startsWith("/product") && (
+     {location.pathname !== "/" && location.pathname !== "/home"  && location.pathname !== "/Home" && !location.pathname.startsWith("/product") && (
   <Breadcrumbs />
 )}
 
+
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/Home" element={<Home/>} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/wishlist" element={<Wishlist />} />
@@ -60,9 +62,9 @@ function AppWrapper() {
         <Route path="/terms-and-conditions" element={<TermsConditions />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/refund-returns" element={<RefundReturns />} />
-        {/* <Route path="/my-account" element={<MyAccount />} />
-        <Route path="/track-order" element={<TrackOrder />} />
-        <Route path="/wishlist" element={<Wishlist />} /> */}
+        <Route path="/Account" element={<Account />}/>
+        <Route path="/track-order" element={<Account />} />
+        {/* // <Route path="/wishlist" element={<Wishlist />} />  */}
 
         {/* Auth */}
          {/* <Route path="/login" element={<Login />} /> 

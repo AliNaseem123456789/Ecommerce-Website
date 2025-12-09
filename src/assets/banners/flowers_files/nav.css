@@ -1,0 +1,1 @@
+:root{--global-nav-height:64px}@media (min-width:375px){:root{--global-nav-height:68px}}@media (min-width:600px){:root{--global-nav-height:72px}}@media (min-width:1280px){:root{--global-nav-height:80px}}

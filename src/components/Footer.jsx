@@ -76,7 +76,7 @@ export default function Footer() {
       id: "other",
       title: "Other Business",
       content: [
-        { label: "My Account", path: "/my-account" },
+        { label: "My Account", path: "/account" },
         { label: "Track Order", path: "/track-order" },
         { label: "Wishlist", path: "/wishlist" },
         { label: "Returns / Refund", path: "/refund-returns" },

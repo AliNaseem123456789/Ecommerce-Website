@@ -207,7 +207,7 @@ function Navbar() {
                 position: "relative",
               }}
             >
-              <Link to="/" style={{ color: "white", textDecoration: "none" }}>
+              <Link to="/Home" style={{ color: "white", textDecoration: "none" }}>
                 Home
               </Link>
               <Link
@@ -325,7 +325,7 @@ function Navbar() {
             }}
           >
             <Link
-              to="/"
+              to="/Home"
               onClick={() => setSidebarOpen(false)}
               style={{ textDecoration: "none", color: "#111" }}
             >
@@ -383,13 +383,13 @@ function Navbar() {
               )}
             </div>
 
-            <Link
+            {/* <Link
               to="/wishlist"
               onClick={() => setSidebarOpen(false)}
               style={{ textDecoration: "none", color: "#111" }}
             >
               Wishlist
-            </Link>
+            </Link> */}
             <Link
               to="/about"
               onClick={() => setSidebarOpen(false)}
@@ -397,85 +397,167 @@ function Navbar() {
             >
               About Us
             </Link>
+
+
+            {/* LOGIN / LOGOUT BUTTONS */}
+{!user ? (
+  // SHOW LOGIN BUTTON
+  <button
+    onClick={() => {
+      setShowAuthModal(true);
+      setSidebarOpen(false);
+    }}
+    style={{
+      padding: "10px",
+      borderRadius: "8px",
+      background: "#111",
+      color: "white",
+      border: "none",
+      fontSize: "16px",
+      cursor: "pointer",
+      marginTop: "10px"
+    }}
+  >
+    Login
+  </button>
+) : (
+  // SHOW LOGOUT BUTTON
+  <button
+    onClick={async () => {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSidebarOpen(false);
+    }}
+    style={{
+      padding: "10px",
+      borderRadius: "8px",
+      background: "#d9534f",
+      color: "white",
+      border: "none",
+      fontSize: "16px",
+      cursor: "pointer",
+      marginTop: "10px"
+    }}
+  >
+    Logout
+  </button>
+)}
+
           </nav>
         </div>
       )}
 
-      {/* Bottom Navbar for Mobile */}
-      {isMobile && (
-        <div
+     {/* Bottom Navbar for Mobile */}
+{isMobile && (
+  <div
+    style={{
+      position: "fixed",
+      bottom: 0,
+      left: 0,
+      width: "100%",
+      backgroundColor: "#fff",
+      borderTop: "1px solid #ddd",
+      display: "flex",
+      justifyContent: "space-around",
+      alignItems: "center",
+      padding: "10px 0",
+      zIndex: 1000,
+    }}
+  >
+    {/* Home */}
+    <div
+      onClick={() => navigate("/")}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        cursor: "pointer",
+      }}
+    >
+      <FaHome size={22} />
+      <span style={{ fontSize: "12px" }}>Home</span>
+    </div>
+
+    {/* Shop */}
+    <div
+      onClick={() => navigate("/shop")}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        cursor: "pointer",
+      }}
+    >
+      <FaStore size={22} />
+      <span style={{ fontSize: "12px" }}>Shop</span>
+    </div>
+
+    {/* Wishlist ⭐ NEWLY ADDED */}
+    <div
+      onClick={() => navigate("/wishlist")}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        cursor: "pointer",
+        position: "relative",
+      }}
+    >
+      <FaStar size={22} />
+      {wishlist.length > 0 && (
+        <span
           style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            backgroundColor: "#fff",
-            borderTop: "1px solid #ddd",
-            display: "flex",
-            justifyContent: "space-around",
-            alignItems: "center",
-            padding: "10px 0",
-            zIndex: 1000,
+            position: "absolute",
+            top: "-6px",
+            right: "-10px",
+            background: "red",
+            color: "white",
+            borderRadius: "50%",
+            padding: "2px 6px",
+            fontSize: "12px",
+            fontWeight: "bold",
           }}
         >
-          <div
-            onClick={() => navigate("/")}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              cursor: "pointer",
-            }}
-          >
-            <FaHome size={22} />
-            <span style={{ fontSize: "12px" }}>Home</span>
-          </div>
-
-          <div
-            onClick={() => navigate("/shop")}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              cursor: "pointer",
-            }}
-          >
-            <FaStore size={22} />
-            <span style={{ fontSize: "12px" }}>Shop</span>
-          </div>
-
-          <div
-            onClick={handleCartClick} 
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              cursor: "pointer",
-              position: "relative",
-            }}
-          >
-            <FaShoppingCart size={22} />
-            {totalItems > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-6px",
-                  right: "-10px",
-                  background: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  padding: "2px 6px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                }}
-              >
-                {totalItems}
-              </span>
-            )}
-            <span style={{ fontSize: "12px" }}>Cart</span>
-          </div>
-        </div>
+          {wishlist.length}
+        </span>
       )}
+      <span style={{ fontSize: "12px" }}>Wishlist</span>
+    </div>
+
+    {/* Cart */}
+    <div
+      onClick={handleCartClick}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        cursor: "pointer",
+        position: "relative",
+      }}
+    >
+      <FaShoppingCart size={22} />
+      {totalItems > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: "-6px",
+            right: "-10px",
+            background: "red",
+            color: "white",
+            borderRadius: "50%",
+            padding: "2px 6px",
+            fontSize: "12px",
+            fontWeight: "bold",
+          }}
+        >
+          {totalItems}
+        </span>
+      )}
+      <span style={{ fontSize: "12px" }}>Cart</span>
+    </div>
+  </div>
+)}
+
       {/* Spacer for Mobile */}
       {isMobile && <div style={{ height: "56px" }}></div>}
 

@@ -1,0 +1,1 @@
+:root{--grid-gutter-width:16px;--grid-column-width:calc((100vw - 208px) / 12)}@media (min-width:744px){:root{--grid-gutter-width:24px;--grid-column-width:calc((100vw - 312px) / 12)}}@media (min-width:1280px){:root{--grid-gutter-width:40px;--grid-column-width:calc((100vw - 520px) / 12)}}
