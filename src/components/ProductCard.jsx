@@ -1,4 +1,3 @@
-// ProductCard.jsx
 import React, { useState, useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { FaEye, FaBalanceScale, FaRegStar, FaStar } from "react-icons/fa";
@@ -12,10 +11,10 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
   const id = product.product_id;
 
   // ✅ VITE COMPATIBLE IMAGE LOADER
-  const resolveImage = (id, index = 0) => {
+  const resolveImage = (id, index = 0, ext = "jpeg") => {
     try {
       return new URL(
-        `../assets/products/${id}${index ? `-${index}` : ""}.jpeg`,
+        `/src/assets/products/${id}${index ? `-${index}` : ""}.${ext}`,
         import.meta.url
       ).href;
     } catch {
@@ -23,13 +22,21 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
     }
   };
 
-  // ✅ Build all possible image paths
-  const images = useMemo(
-    () => [0, 1, 2, 3].map((i) => resolveImage(id, i)),
-    [id]
-  );
+  // ✅ Build images array (support multiple indexes & extensions)
+  const images = useMemo(() => {
+    const exts = ["jpeg", "jpg", "png"];
+    const imgs = [];
+    for (let i = 0; i <= 3; i++) {
+      exts.forEach(ext => {
+        const url = resolveImage(id, i, ext);
+        imgs.push(url);
+      });
+    }
+    // remove duplicates
+    return [...new Set(imgs)];
+  }, [id]);
 
-  // Show 2nd image on hover if exists
+  // Show second image on hover if available
   const displayedImage = hover && images[1] ? images[1] : images[0];
 
   const isWishlisted = wishlist.includes(id);
@@ -154,9 +161,7 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             <img
               src={displayedImage}
               alt={product.name}
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/300";
-              }}
+              onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
               style={{
                 width: "100%",
                 height: "100%",
