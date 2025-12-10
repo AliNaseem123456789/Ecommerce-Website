@@ -23,9 +23,9 @@ const RefundReturns = () => {
       </h1>
 
       {/* Content */}
-      <p>
+      {/* <p>
         This is a sample page.
-      </p>
+      </p> */}
 
       <h2>Overview</h2>
       <p>

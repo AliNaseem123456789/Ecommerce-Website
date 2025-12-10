@@ -5,9 +5,9 @@ import ProductCard from "../components/ProductCard";
 import { supabase } from "../pages/SupabaseClient";
 import HeroBanner from "../components/Landing/HeroSection";
 import BrandStatement from "../components/Landing/BrandStatements";
-// import MiniTopBar from "../components/Landing/MiniTopBAr";
 import Testimonials from "../components/Landing/Testimonials";
 import WhyShopWithUs from "../components/Landing/WhyShopWithUs";
+
 // Hero images
 import hero3 from "../assets/banners/flowers.jpeg";
 import hero4 from "../assets/banners/hero4.jpeg";
@@ -15,13 +15,12 @@ import hero5 from "../assets/banners/hero5.jpeg";
 import hero6 from "../assets/banners/hero6.jpeg";
 import hero7 from "../assets/banners/hero7.jpeg";
 
-import product1 from "../assets/banners/product1banner.png"
-import product2 from "../assets/banners/product2banner.png"
-import product3 from "../assets/banners/product3banner.png"
-import Navbar from "../components/Navbar";
+import product1 from "../assets/banners/product1banner.png";
+import product2 from "../assets/banners/product2banner.png";
+import product3 from "../assets/banners/product3banner.png";
+
 import SideBySide from "../components/Landing/SideBySide";
 import LandingNavbar from "../components/Landing/LandingNavbar";
-import HowItWorks from "../components/Landing/HowItWorks";
 import MainBanner from "../components/Landing/MainBanner";
 
 export default function Home() {
@@ -38,12 +37,11 @@ export default function Home() {
   const [currentHero, setCurrentHero] = useState(0);
   const heroImages = [hero3, hero4, hero5, hero6, hero7];
 
-  // Filter state (ALWAYS STRING)
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Slider state
   const visibleCount = isMobile ? 2 : 4;
   const [slideIndex, setSlideIndex] = useState(0);
+
   useEffect(() => {
     fetchData();
 
@@ -88,7 +86,6 @@ export default function Home() {
     setIsLoading(false);
   };
 
-  /* 🔥 FIXED FILTER — category_id converted to STRING */
   const filteredProducts =
     selectedCategory === "all"
       ? products
@@ -96,7 +93,6 @@ export default function Home() {
           (p) => String(p.category_id) === String(selectedCategory)
         );
 
-  // Slider navigation
   const handleNext = () => {
     setSlideIndex((prev) =>
       prev + 1 >= filteredProducts.length ? 0 : prev + 1
@@ -124,121 +120,161 @@ export default function Home() {
 
   return (
     <>
-   {/* <Navbar/> */}
-    <MainBanner
-    heroImages={[
-      {
-        image: product1,
-        title: "Discover legance for Every Moment",
-        subtitle: "Premium Products, Delivered With Love",
-        description: "Our thoughtfully curated items elevate your lifestyle."
-      },
-      {
-        image: product2,
-        title: "Luxury Meets Comfort",
-        subtitle: "Handpicked Items for Your Home",
-        description: "Transform your living space into a masterpiece."
-      },
-      {
-        image: product3,
-        title: "Style That Inspires",
-        subtitle: "Modern Designs for Modern Living",
-        description: "Experience beauty, quality, and elegance."
-      }
-    ]}
-  />
+      {/* <LandingNavbar /> */}
 
-    
-    <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      {/* CATEGORY FILTER TABS */}
-      <section style={{ marginTop: 30 }}>
-        <div style={styles.tabsWrapper}>
-          <div style={styles.tabsContainer}>
-            {/* ALL TAB */}
-            <div
-              onClick={() => {
-                setSelectedCategory("all");
-                setSlideIndex(0);
-              }}
-              style={{
-                ...styles.tab,
-                borderBottom:
-                  selectedCategory === "all"
-                    ? "3px solid black"
-                    : "3px solid transparent",
-                color: selectedCategory === "all" ? "black" : "#777",
-              }}
-            >
-              All Products
+      <MainBanner
+        heroImages={[
+          {
+            image: product1,
+            title: "Discover elegance for Every Moment",
+            subtitle: "Premium Products",
+            description: "Thoughtfully curated items elevate your lifestyle.",
+            productId: 25,
+          },
+          {
+            image: product2,
+            title: "Luxury Meets Comfort",
+            subtitle: "Handpicked Items for Your Home",
+            description: "Transform your living space into a masterpiece.",
+            productId: 31,
+          },
+          {
+            image: product3,
+            title: "Style That Inspires",
+            subtitle: "Modern Designs for Modern Living",
+            description: "Experience beauty, quality, and elegance.",
+            productId: 30,
+          },
+        ]}
+      />
+
+      <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+        {/* CATEGORY FILTER */}
+        <section style={{ marginTop: 30 }}>
+          {isMobile ? (
+            /* MOBILE 2-ROW BUBBLE SELECTOR */
+            <div style={styles.mobileBubbleWrapper}>
+              {["all", ...categories.map((c) => String(c.category_id))].map(
+                (catId, index) => {
+                  const catName =
+                    catId === "all"
+                      ? "All"
+                      : categories.find((c) => String(c.category_id) === catId)
+                          ?.name;
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedCategory(catId)}
+                      style={{
+                        ...styles.mobileBubble,
+                        backgroundColor:
+                          selectedCategory === catId ? "#000" : "#f0f0f0",
+                        color: selectedCategory === catId ? "#fff" : "#333",
+                      }}
+                    >
+                      {catName}
+                    </div>
+                  );
+                }
+              )}
             </div>
+          ) : (
+            /* DESKTOP CATEGORY TABS */
+            <div style={styles.tabsWrapper}>
+              <div style={styles.tabsContainer}>
+                <div
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setSlideIndex(0);
+                  }}
+                  style={{
+                    ...styles.tab,
+                    borderBottom:
+                      selectedCategory === "all"
+                        ? "3px solid black"
+                        : "3px solid transparent",
+                    color: selectedCategory === "all" ? "black" : "#777",
+                  }}
+                >
+                  All Products
+                </div>
 
-            {/* CATEGORY TABS */}
-            {categories.map((cat) => (
-              <div
-                key={cat.category_id}
-                onClick={() => {
-                  setSelectedCategory(String(cat.category_id)); // 🔥 FIXED
-                  setSlideIndex(0);
-                }}
-                style={{
-                  ...styles.tab,
-                  borderBottom:
-                    selectedCategory === String(cat.category_id)
-                      ? "3px solid black"
-                      : "3px solid transparent",
-                  color:
-                    selectedCategory === String(cat.category_id)
-                      ? "black"
-                      : "#777",
-                }}
-              >
-                {cat.name}
+                {categories.map((cat) => (
+                  <div
+                    key={cat.category_id}
+                    onClick={() => {
+                      setSelectedCategory(String(cat.category_id));
+                      setSlideIndex(0);
+                    }}
+                    style={{
+                      ...styles.tab,
+                      borderBottom:
+                        selectedCategory === String(cat.category_id)
+                          ? "3px solid black"
+                          : "3px solid transparent",
+                      color:
+                        selectedCategory === String(cat.category_id)
+                          ? "black"
+                          : "#777",
+                    }}
+                  >
+                    {cat.name}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
+          )}
+        </section>
 
-      {/* PRODUCT SLIDER */}
-       <section style={{ marginTop: 40,marginLeft:10 }}><h2 style={styles.sectionTitle}>Products</h2></section>
-        
-      <section style={{ marginTop: 40,marginLeft:10, padding: "0 16px", position: "relative" }}>
-      
+        {/* SECTION TITLE */}
+        <section style={{ textAlign: "center", marginTop: 40 }}>
+          <h2 style={styles.sectionTitle}>Products</h2>
+        </section>
 
-        {filteredProducts.length > 0 ? (
-          <>
-            {/* <button style={styles.arrowLeft} onClick={handlePrev}>
-              ◀
-            </button>
-            <button style={styles.arrowRight} onClick={handleNext}>
-              ▶
-            </button> */}
-
+        {/* RESPONSIVE PRODUCT LAYOUT */}
+        <section
+          style={{
+            marginTop: 20,
+            marginLeft: 20,
+            width: "95%",
+            padding: "0 16px",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* MOBILE — 2x2 GRID */}
+          {isMobile ? (
+            <div style={styles.mobileGrid}>
+              {filteredProducts.slice(0, 4).map((product) => (
+                <div key={product.product_id} style={styles.mobileCardWrapper}>
+                  <ProductCard product={product} addToCart={addToCart} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* DESKTOP SLIDER */
             <div style={styles.sliderRow}>
               {getVisibleProducts().map((product) => (
                 <div
                   key={product.product_id}
-                  style={{ minWidth: `${100 / visibleCount}%` }}
+                  style={{
+                    minWidth: `${100 / visibleCount}%`,
+                    padding: "0 8px",
+                    marginBottom: 10,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <ProductCard product={product} addToCart={addToCart} />
                 </div>
               ))}
             </div>
-          </>
-        ) : (
-          <p style={{ textAlign: "center", color: "#777" }}>
-            No products in this category.
-          </p>
-        )}
-      </section>
-    </div>
-  
+          )}
+        </section>
+      </div>
 
-    <SideBySide/>
-  <BrandStatement/>
-  <Testimonials/>
-    <HowItWorks/>
-    <WhyShopWithUs/> 
+      <SideBySide />
+      <BrandStatement />
+      <Testimonials />
+      <WhyShopWithUs />
     </>
   );
 }
@@ -255,53 +291,26 @@ const styles = {
     color: "#666",
   },
 
-  heroFullScreen: {
-    position: "relative",
-    width: "100%",
-    height: "100vh",
-    overflow: "hidden",
-  },
-  heroImage: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    objectPosition: "center",
-    transition: "opacity 1.5s ease-in-out",
-  },
-  heroButtonWrapper: {
-    position: "absolute",
-    bottom: "10%",
-    left: "50%",
-    transform: "translateX(-50%)",
-  },
-  heroButton: {
-    background: "black",
-    color: "white",
-    padding: "14px 32px",
-    fontSize: 18,
-    borderRadius: 8,
-    fontWeight: 600,
-    cursor: "pointer",
-    border: "none",
-  },
-
   tabsWrapper: {
     width: "100%",
     display: "flex",
     justifyContent: "center",
+    overflowX: "auto",
   },
+
   tabsContainer: {
     display: "flex",
     gap: 30,
     borderBottom: "1px solid #ddd",
     paddingBottom: 10,
   },
+
   tab: {
     fontSize: 16,
     cursor: "pointer",
     paddingBottom: 8,
     transition: "0.2s",
+    whiteSpace: "nowrap",
   },
 
   sectionTitle: {
@@ -309,46 +318,44 @@ const styles = {
     fontWeight: 600,
     marginBottom: 20,
   },
+
   sliderRow: {
     display: "flex",
-    gap: 16,
     overflow: "hidden",
   },
-  arrowLeft: {
-    position: "absolute",
-    top: "50%",
-    left: 0,
-    transform: "translateY(-50%)",
-    zIndex: 2,
-    background: "rgba(0,0,0,0.5)",
-    color: "white",
-    border: "none",
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    cursor: "pointer",
-  },
-  arrowRight: {
-    position: "absolute",
-    top: "50%",
-    right: 0,
-    transform: "translateY(-50%)",
-    zIndex: 2,
-    background: "rgba(0,0,0,0.5)",
-    color: "white",
-    border: "none",
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    cursor: "pointer",
+
+  // MOBILE GRID
+  mobileGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "12px",
+    padding: "0 10px",
   },
 
-  footer: {
-    marginTop: 40,
-    padding: "20px 0",
-    textAlign: "center",
-    background: "#f5f5f5",
-    color: "#666",
+  mobileCardWrapper: {
+    transform: "scale(0.85)",
+    width: "100%",
+  },
+
+  // MOBILE BUBBLE NAV
+  mobileBubbleWrapper: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gridAutoRows: "50px",
+    gap: "8px",
+    padding: "0 10px",
+    justifyContent: "center",
+  },
+
+  mobileBubble: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 25,
+    padding: "8px 12px",
     fontSize: 14,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    transition: "0.2s",
   },
 };
