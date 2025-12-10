@@ -8,7 +8,7 @@ import BrandStatement from "../components/Landing/BrandStatements";
 import Testimonials from "../components/Landing/Testimonials";
 import WhyShopWithUs from "../components/Landing/WhyShopWithUs";
 // import ProductSlider from "../components/Landing/ProductSlider";
-import ProductSlider from "../components/Landing/ProductSLider";
+import ProductSlider from "../components/Landing/ProductSlider";
 import hero3 from "../assets/banners/flowers.jpeg";
 import hero4 from "../assets/banners/hero4.jpeg";
 import hero5 from "../assets/banners/hero5.jpeg";
