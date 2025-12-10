@@ -8,9 +8,7 @@ export default function AboutUs() {
       </h1>
 
       <p style={{ lineHeight: "1.7", color: "#4b5563" }}>
-        This is a placeholder About Us page. You can replace this text with your
-        brand story, mission, and any details you want customers to know about
-        your business.
+         Our collection features a wide range of electronics, beauty items, kitchen and home essentials designed to enhance comfort, productivity, and lifestyle. With a focus on quality and affordability, we work to make finding the right product easy and enjoyable. We believe in honest service, thoughtful product selection, and creating a shopping experience that brings convenience and satisfaction to every customer.
       </p>
     </div>
   );

@@ -5,19 +5,16 @@ const testimonials = [
   {
     name: "Alice Johnson",
     text: "Amazing service! The products are top-notch and the delivery was super fast.",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
     role: "Fashion Enthusiast",
   },
   {
     name: "Michael Smith",
     text: "I love the design and quality. Highly recommended store for anyone!",
-    image: "https://randomuser.me/api/portraits/men/36.jpg",
     role: "Tech Lover",
   },
   {
     name: "Sara Lee",
     text: "Fast shipping and excellent customer support. Will buy again!",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
     role: "Home Decor Lover",
   },
 ];
@@ -75,24 +72,15 @@ export default function Testimonials() {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              padding: "20px",
+              padding: "40px 20px", // Increased top padding to compensate for removed image
               background: "white",
               borderRadius: 15,
               boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
             }}
           >
-            <img
-              src={t.image}
-              alt={t.name}
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: "50%",
-                objectFit: "cover",
-                marginBottom: 20,
-                border: "3px solid #ddd",
-              }}
-            />
+            {/* Removed Image — Replaced with spacing */}
+            <div style={{ height: 60, marginBottom: 10 }}></div>
+
             <p
               style={{
                 fontSize: 20,
@@ -104,6 +92,7 @@ export default function Testimonials() {
             >
               "{t.text}"
             </p>
+
             <p
               style={{
                 fontWeight: 700,
@@ -114,6 +103,7 @@ export default function Testimonials() {
             >
               {t.name}
             </p>
+
             <p style={{ color: "#777", fontSize: 14 }}>{t.role}</p>
           </div>
         ))}

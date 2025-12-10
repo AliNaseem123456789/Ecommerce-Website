@@ -129,9 +129,9 @@ export default function LandingPage() {
     heroImages={[
       {
         image: product1,
-        title: "Discover legance for Every Moment",
-        subtitle: "Premium Products, Delivered With Love",
-        description: "Our thoughtfully curated items elevate your lifestyle."
+        title: "Discover elegance for Every Moment",
+        subtitle: "Premium Products",
+        description: "Thoughtfully curated items elevate your lifestyle."
       , productId: 25
       },
       {
@@ -205,9 +205,18 @@ export default function LandingPage() {
       </section>
 
       {/* PRODUCT SLIDER */}
-       <section style={{ marginTop: 40,marginLeft:10 }}><h2 style={styles.sectionTitle}>Products</h2></section>
+       <section style={{ marginTop: 40,marginLeft:500}}><h2 style={styles.sectionTitle}>Products</h2></section>
         
-      <section style={{ marginTop: 40,marginLeft:10, padding: "0 16px", position: "relative" }}>
+     <section style={{ 
+  marginTop: 40,
+  marginLeft:50,
+  marginBottom:10,
+  width: "90%",
+  padding: "0 20px",   // clean, equal padding
+  boxSizing: "border-box",
+  position: "relative"
+}}>
+
       
 
         {filteredProducts.length > 0 ? (
@@ -223,7 +232,7 @@ export default function LandingPage() {
               {getVisibleProducts().map((product) => (
                 <div
                   key={product.product_id}
-                  style={{ minWidth: `${100 / visibleCount}%` }}
+                  style={{ minWidth: `${100 / visibleCount}%`,padding: "0 8px", boxSizing: "border-box",marginBottom:5 }}
                 >
                   <ProductCard product={product} addToCart={addToCart} />
                 </div>
@@ -238,11 +247,10 @@ export default function LandingPage() {
       </section>
     </div>
   
-
-    <SideBySide/>
+  <SideBySide/>  
   <BrandStatement/>
   <Testimonials/>
-    <HowItWorks/>
+    {/* <HowItWorks/> */}
     <WhyShopWithUs/> 
     </>
   );
@@ -315,10 +323,10 @@ const styles = {
     marginBottom: 20,
   },
   sliderRow: {
-    display: "flex",
-    gap: 16,
-    overflow: "hidden",
-  },
+  display: "flex",
+  overflow: "hidden",
+}
+,
   arrowLeft: {
     position: "absolute",
     top: "50%",

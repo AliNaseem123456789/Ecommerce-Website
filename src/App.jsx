@@ -31,6 +31,8 @@ import { WishlistProvider } from "./components/WishlistContext";
 import Checkout from "./pages/Checkout";
 import Breadcrumbs from "./components/Breadcrumbs";
 import NotFoundPage from "./pages/NotFoundPage";
+
+import FAQ from "./pages/static/FAQ"
 function AppWrapper() {
   const { isSidebarOpen, closeSidebar } = useContext(CartContext);
   const location = useLocation();
@@ -66,6 +68,7 @@ function AppWrapper() {
         <Route path="/Account" element={<Account />}/>
         <Route path="/track-order" element={<Account />} />
         <Route path="/NotFoundPage" element={<NotFoundPage />} />
+        <Route path="/faq" element={<FAQ />} />
         {/* // <Route path="/wishlist" element={<Wishlist />} />  */}
 
         {/* Auth */}
@@ -75,7 +78,6 @@ function AppWrapper() {
          <Route path="/login-required" element={<LoginRequired />} />
          <Route path="/account" element={ <ProtectedRoute> <Account /> </ProtectedRoute>}/>
          <Route path="/checkout" element={<Checkout />}/>
-
       </Routes>
 
       {/* Render Cart Sidebar only if not on /cart page */}

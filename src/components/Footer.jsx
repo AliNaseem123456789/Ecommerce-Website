@@ -79,6 +79,7 @@ export default function Footer() {
         { label: "My Account", path: "/account" },
         { label: "Track Order", path: "/track-order" },
         { label: "Wishlist", path: "/wishlist" },
+         { label: "FAQ", path: "/faq" },   
         { label: "Returns / Refund", path: "/refund-returns" },
       ].map((item, i) => (
         <p
