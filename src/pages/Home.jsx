@@ -8,7 +8,6 @@ import BrandStatement from "../components/Landing/BrandStatements";
 import Testimonials from "../components/Landing/Testimonials";
 import WhyShopWithUs from "../components/Landing/WhyShopWithUs";
 
-// Hero images
 import hero3 from "../assets/banners/flowers.jpeg";
 import hero4 from "../assets/banners/hero4.jpeg";
 import hero5 from "../assets/banners/hero5.jpeg";
@@ -22,6 +21,7 @@ import product3 from "../assets/banners/product3banner.png";
 import SideBySide from "../components/Landing/SideBySide";
 import LandingNavbar from "../components/Landing/LandingNavbar";
 import MainBanner from "../components/Landing/MainBanner";
+import LandingProductCard from "../components/Landing/LandingProductCard";  // ⭐ NEW IMPORT
 
 export default function Home() {
   const { addToCart } = useContext(CartContext);
@@ -42,8 +42,12 @@ export default function Home() {
   const visibleCount = isMobile ? 2 : 4;
   const [slideIndex, setSlideIndex] = useState(0);
 
+  // ⭐ NEW: Recommended Products State
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+
   useEffect(() => {
     fetchData();
+    fetchRecommendations(); // ⭐ load recommended products
 
     const resizeHandler = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", resizeHandler);
@@ -56,6 +60,15 @@ export default function Home() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // ⭐ FETCH RECOMMENDATIONS
+  async function fetchRecommendations() {
+    const { data, error } = await supabase.from("products").select("*").limit(12);
+    if (!error && data) {
+      const shuffled = data.sort(() => 0.5 - Math.random());
+      setRecommendedProducts(shuffled.slice(0, 6));
+    }
+  }
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -107,11 +120,9 @@ export default function Home() {
 
   const getVisibleProducts = () => {
     if (filteredProducts.length === 0) return [];
-    const arr = [];
-    for (let i = 0; i < visibleCount; i++) {
-      arr.push(filteredProducts[(slideIndex + i) % filteredProducts.length]);
-    }
-    return arr;
+    return Array.from({ length: visibleCount }).map(
+      (_, i) => filteredProducts[(slideIndex + i) % filteredProducts.length]
+    );
   };
 
   if (isLoading) {
@@ -147,14 +158,18 @@ export default function Home() {
           },
         ]}
       />
-  <section style={{ textAlign: "center", marginTop: 40 }}>
-          <h2 style={styles.sectionTitle}>All Products</h2>
-        </section>
+
+     
+
+      <section style={{ textAlign: "center", marginTop: 40 }}>
+        <h2 style={styles.sectionTitle}>All Products</h2>
+      </section>
+
+      {/* REST OF YOUR ORIGINAL CODE BELOW — UNCHANGED */}
       <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
         {/* CATEGORY FILTER */}
         <section style={{ marginTop: 30 }}>
           {isMobile ? (
-            /* MOBILE 2-ROW BUBBLE SELECTOR */
             <div style={styles.mobileBubbleWrapper}>
               {["all", ...categories.map((c) => String(c.category_id))].map(
                 (catId, index) => {
@@ -181,7 +196,6 @@ export default function Home() {
               )}
             </div>
           ) : (
-            /* DESKTOP CATEGORY TABS */
             <div style={styles.tabsWrapper}>
               <div style={styles.tabsContainer}>
                 <div
@@ -228,10 +242,7 @@ export default function Home() {
           )}
         </section>
 
-        {/* SECTION TITLE */}
-      
-
-        {/* RESPONSIVE PRODUCT LAYOUT */}
+        {/* PRODUCT GRID / SLIDER */}
         <section
           style={{
             marginTop: 20,
@@ -241,7 +252,6 @@ export default function Home() {
             boxSizing: "border-box",
           }}
         >
-          {/* MOBILE — 2x2 GRID */}
           {isMobile ? (
             <div style={styles.mobileGrid}>
               {filteredProducts.slice(0, 4).map((product) => (
@@ -251,7 +261,6 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            /* DESKTOP SLIDER */
             <div style={styles.sliderRow}>
               {getVisibleProducts().map((product) => (
                 <div
@@ -273,6 +282,33 @@ export default function Home() {
 
       <SideBySide />
       <BrandStatement />
+
+ {/* ⭐ NEW — RECOMMENDED PRODUCTS SECTION */}
+      <div style={{ padding: "40px 20px" }}>
+        <h2
+          style={{
+            fontSize: "26px",
+            fontWeight: 700,
+            fontFamily: "Poppins",
+            marginBottom: "20px",
+          }}
+        >
+          You May Also Like
+        </h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+            gap: "18px",
+          }}
+        >
+          {recommendedProducts.map((product) => (
+            <LandingProductCard key={product.product_id} product={product} />
+          ))}
+        </div>
+      </div>
+
       <Testimonials />
       <WhyShopWithUs />
     </>
@@ -324,7 +360,6 @@ const styles = {
     overflow: "hidden",
   },
 
-  // MOBILE GRID
   mobileGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(2, 1fr)",
@@ -337,7 +372,6 @@ const styles = {
     width: "100%",
   },
 
-  // MOBILE BUBBLE NAV
   mobileBubbleWrapper: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
