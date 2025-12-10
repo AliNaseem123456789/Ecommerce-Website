@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 export default function MainBanner({ heroImages }) {
   const navigate = useNavigate();
   const [currentHero, setCurrentHero] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const isMobile = windowWidth < 768;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -12,6 +14,12 @@ export default function MainBanner({ heroImages }) {
     }, 5000);
     return () => clearInterval(interval);
   }, [heroImages.length]);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const sentenceVariant = {
     hidden: { opacity: 0, y: 20 },
@@ -43,7 +51,13 @@ export default function MainBanner({ heroImages }) {
       ))}
 
       {/* LEFT SIDE TEXT */}
-      <div style={styles.leftTextBox}>
+      <div
+        style={{
+          ...styles.leftTextBox,
+          width: isMobile ? "85%" : "40%",
+          left: isMobile ? "7%" : "6%",
+        }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentHero}
@@ -53,7 +67,12 @@ export default function MainBanner({ heroImages }) {
             exit="exit"
           >
             {/* TITLE */}
-            <motion.h1 style={styles.bigTitle}>
+            <motion.h1
+              style={{
+                ...styles.bigTitle,
+                fontSize: isMobile ? "32px" : "62px",
+              }}
+            >
               {heroImages[currentHero].title.split("").map((char, i) => (
                 <motion.span key={i} variants={letterVariant}>
                   {char}
@@ -62,7 +81,12 @@ export default function MainBanner({ heroImages }) {
             </motion.h1>
 
             {/* SUBTITLE */}
-            <motion.h2 style={styles.subTitle}>
+            <motion.h2
+              style={{
+                ...styles.subTitle,
+                fontSize: isMobile ? "18px" : "28px",
+              }}
+            >
               {heroImages[currentHero].subtitle.split("").map((char, i) => (
                 <motion.span key={i} variants={letterVariant}>
                   {char}
@@ -71,7 +95,13 @@ export default function MainBanner({ heroImages }) {
             </motion.h2>
 
             {/* DESCRIPTION */}
-            <motion.p style={styles.description}>
+            <motion.p
+              style={{
+                ...styles.description,
+                fontSize: isMobile ? "14px" : "18px",
+                maxWidth: isMobile ? "100%" : "500px",
+              }}
+            >
               {heroImages[currentHero].description.split("").map((char, i) => (
                 <motion.span key={i} variants={letterVariant}>
                   {char}
@@ -80,15 +110,23 @@ export default function MainBanner({ heroImages }) {
             </motion.p>
 
             {/* BUTTONS */}
-            <div style={styles.buttonRow}>
-             <button
-  style={styles.primaryButton}
-  onClick={() => navigate(`/product/${heroImages[currentHero].productId}`)}
->
-  Shop Now
-</button>
+            <div style={{ ...styles.buttonRow, flexDirection: isMobile ? "column" : "row", gap: isMobile ? "8px" : "12px" }}>
               <button
-                style={styles.secondaryButton}
+                style={{
+                  ...styles.primaryButton,
+                  padding: isMobile ? "10px 20px" : "12px 28px",
+                  fontSize: isMobile ? "14px" : "16px",
+                }}
+                onClick={() => navigate(`/product/${heroImages[currentHero].productId}`)}
+              >
+                Shop Now
+              </button>
+              <button
+                style={{
+                  ...styles.secondaryButton,
+                  padding: isMobile ? "10px 20px" : "12px 28px",
+                  fontSize: isMobile ? "14px" : "16px",
+                }}
                 onClick={() => navigate("/shop")}
               >
                 Shop More
@@ -123,15 +161,12 @@ const styles = {
   leftTextBox: {
     position: "absolute",
     top: "50%",
-    left: "6%",
     transform: "translateY(-50%)",
     zIndex: 5,
-    width: "40%",
     color: "#fff",
   },
 
   bigTitle: {
-    fontSize: "62px",
     fontWeight: "800",
     marginBottom: "10px",
     fontFamily: "'Poppins', sans-serif",
@@ -139,44 +174,36 @@ const styles = {
   },
 
   subTitle: {
-    fontSize: "28px",
     fontWeight: "600",
     marginBottom: "15px",
     color: "#dedede",
   },
 
   description: {
-    fontSize: "18px",
     lineHeight: 1.6,
     marginBottom: "25px",
     color: "#e6e6e6",
-    maxWidth: "500px",
   },
 
   buttonRow: {
     display: "flex",
-    gap: "12px",
   },
 
   primaryButton: {
     background: "black",
     color: "white",
-    padding: "12px 28px",
     borderRadius: "6px",
     border: "none",
     cursor: "pointer",
-    fontSize: "16px",
     fontWeight: "600",
   },
 
   secondaryButton: {
     background: "white",
     color: "black",
-    padding: "12px 28px",
     borderRadius: "6px",
     border: "2px solid black",
     cursor: "pointer",
-    fontSize: "16px",
     fontWeight: "600",
   },
 };
