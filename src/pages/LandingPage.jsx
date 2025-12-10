@@ -7,7 +7,8 @@ import HeroBanner from "../components/Landing/HeroSection";
 import BrandStatement from "../components/Landing/BrandStatements";
 import Testimonials from "../components/Landing/Testimonials";
 import WhyShopWithUs from "../components/Landing/WhyShopWithUs";
-
+// import ProductSlider from "../components/Landing/ProductSlider";
+import ProductSlider from "../components/Landing/ProductSLider";
 import hero3 from "../assets/banners/flowers.jpeg";
 import hero4 from "../assets/banners/hero4.jpeg";
 import hero5 from "../assets/banners/hero5.jpeg";
@@ -279,38 +280,58 @@ export default function LandingPage() {
           )}
         </section>
       </div>
-
+<section
+  style={{
+    background: "#f9fafb",   // Your desired section BG
+    padding: "60px 0",
+  }}
+>
       <SideBySide />
       <BrandStatement />
 
- {/* ⭐ NEW — RECOMMENDED PRODUCTS SECTION */}
-      <div style={{ padding: "40px 20px" }}>
-        <h2
-          style={{
-            fontSize: "26px",
-            fontWeight: 700,
-            fontFamily: "Poppins",
-            marginBottom: "20px",
-          }}
-        >
-          You May Also Like
-        </h2>
+<section
+  style={{
+    width: "100%",
+    padding: "60px 0",
+    textAlign: "center",
+    background: "white",
+  }}
+>
+  {/* Heading */}
+  <h2
+    style={{
+      fontSize: "34px",
+      fontWeight: "700",
+      fontFamily: "Poppins, sans-serif",
+      marginBottom: "10px",
+      color: "#111",
+    }}
+  >
+    Best Sellers
+  </h2>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: "18px",
-          }}
-        >
-          {recommendedProducts.map((product) => (
-            <LandingProductCard key={product.product_id} product={product} />
-          ))}
-        </div>
-      </div>
+  {/* Subtitle (OPTIONAL – looks premium) */}
+  <p
+    style={{
+      fontSize: "16px",
+      fontWeight: "400",
+      color: "#555",
+      maxWidth: "500px",
+      margin: "0 auto 40px auto",
+      lineHeight: "1.6",
+    }}
+  >
+    Our most loved products, hand-picked and trending right now.
+  </p>
 
-      <Testimonials />
+  {/* Product Slider */}
+  <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 20px" }}>
+    <ProductSlider products={products} />
+  </div>
+</section>
+      {/* <Testimonials /> */}
       <WhyShopWithUs />
+      </section>
     </>
   );
 }

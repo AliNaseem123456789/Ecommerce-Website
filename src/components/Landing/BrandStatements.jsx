@@ -11,6 +11,7 @@ export default function BrandStatement() {
         gap: "50px",
         flexWrap: "wrap",
         marginTop: 40,
+        backgroundColor:"white"
       }}
     >
       {/* TEXT */}
@@ -18,6 +19,7 @@ export default function BrandStatement() {
         style={{
           flex: "1 1 400px",
           minWidth: "300px",
+          
         }}
       >
         <h2

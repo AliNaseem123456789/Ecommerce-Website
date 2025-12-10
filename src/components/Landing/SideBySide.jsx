@@ -1,4 +1,4 @@
-import Glassbanner from "../../assets/banners/glassbanner.jpg";
+import Glassbanner from "../../assets/products/30.jpeg";
 
 export default function SideBySide() {
   return (
@@ -10,6 +10,7 @@ export default function SideBySide() {
         padding: "60px 8%",
         gap: "50px",
         flexWrap: "wrap",
+        backgroundColor:"white"
       }}
     >
       {/* LEFT IMAGE */}
