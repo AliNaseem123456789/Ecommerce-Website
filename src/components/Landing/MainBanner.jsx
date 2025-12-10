@@ -37,14 +37,23 @@ export default function MainBanner({ heroImages }) {
   };
 
   return (
-    <section style={styles.bannerContainer}>
+    <section
+      style={{
+        ...styles.bannerContainer,
+        height: isMobile ? "70vh" : "100vh", // ⭐ Mobile height reduced
+      }}
+    >
       {/* BACKGROUND IMAGE */}
       {heroImages.map((slide, index) => (
         <motion.img
           key={index}
           src={slide.image}
           alt=""
-          style={styles.heroImage}
+          style={{
+            ...styles.heroImage,
+            objectPosition: isMobile ? "85% center" : "right center", // ⭐ Focus image on right
+            transform: isMobile ? "translateX(0%)" : "none", // ⭐ Slight left push on mobile
+          }}
           animate={{ opacity: index === currentHero ? 1 : 0 }}
           transition={{ duration: 1.5 }}
         />
@@ -54,8 +63,10 @@ export default function MainBanner({ heroImages }) {
       <div
         style={{
           ...styles.leftTextBox,
-          width: isMobile ? "85%" : "40%",
-          left: isMobile ? "7%" : "6%",
+          width: isMobile ? "88%" : "40%",
+          left: isMobile ? "5%" : "6%",
+          top: isMobile ? "55%" : "50%",
+          transform: "translateY(-50%)",
         }}
       >
         <AnimatePresence mode="wait">
@@ -110,17 +121,26 @@ export default function MainBanner({ heroImages }) {
             </motion.p>
 
             {/* BUTTONS */}
-            <div style={{ ...styles.buttonRow, flexDirection: isMobile ? "column" : "row", gap: isMobile ? "8px" : "12px" }}>
+            <div
+              style={{
+                ...styles.buttonRow,
+                flexDirection: isMobile ? "column" : "row",
+                gap: isMobile ? "8px" : "12px",
+              }}
+            >
               <button
                 style={{
                   ...styles.primaryButton,
                   padding: isMobile ? "10px 20px" : "12px 28px",
                   fontSize: isMobile ? "14px" : "16px",
                 }}
-                onClick={() => navigate(`/product/${heroImages[currentHero].productId}`)}
+                onClick={() =>
+                  navigate(`/product/${heroImages[currentHero].productId}`)
+                }
               >
                 Shop Now
               </button>
+
               <button
                 style={{
                   ...styles.secondaryButton,
@@ -143,7 +163,6 @@ export default function MainBanner({ heroImages }) {
 const styles = {
   bannerContainer: {
     width: "100%",
-    height: "100vh",
     position: "relative",
     overflow: "hidden",
   },
@@ -156,12 +175,11 @@ const styles = {
     top: 0,
     left: 0,
     zIndex: 1,
+    transition: "transform 0.4s ease",
   },
 
   leftTextBox: {
     position: "absolute",
-    top: "50%",
-    transform: "translateY(-50%)",
     zIndex: 5,
     color: "#fff",
   },
