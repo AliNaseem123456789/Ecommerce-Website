@@ -66,7 +66,7 @@ function AppWrapper() {
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/refund-returns" element={<RefundReturns />} />
         {/* <Route path="/Account" element={<Account />}/> */}
-        <Route path="/track-order" element={<Account />} />
+       
         <Route path="/NotFoundPage" element={<NotFoundPage />} />
         <Route path="/faq" element={<FAQ />} />
         {/* // <Route path="/wishlist" element={<Wishlist />} />  */}
@@ -77,6 +77,7 @@ function AppWrapper() {
          {/* <Route path="/account" element={<Account />} />  */}
          <Route path="/login-required" element={<LoginRequired />} />
          <Route path="/account" element={ <ProtectedRoute> <Account /> </ProtectedRoute>}/>
+         <Route path="/track-order" element={ <ProtectedRoute> <Account /> </ProtectedRoute>}/>
          <Route path="/checkout" element={<Checkout />}/>
       </Routes>
 
