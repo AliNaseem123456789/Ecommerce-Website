@@ -65,7 +65,7 @@ function AppWrapper() {
         <Route path="/terms-and-conditions" element={<TermsConditions />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/refund-returns" element={<RefundReturns />} />
-        <Route path="/Account" element={<Account />}/>
+        {/* <Route path="/Account" element={<Account />}/> */}
         <Route path="/track-order" element={<Account />} />
         <Route path="/NotFoundPage" element={<NotFoundPage />} />
         <Route path="/faq" element={<FAQ />} />
