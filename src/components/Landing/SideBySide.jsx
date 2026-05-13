@@ -1,4 +1,4 @@
-import Glassbanner from "../../assets/products/30.jpeg";
+import Glassbanner from "../../assets/banners/30.jpeg";
 
 export default function SideBySide() {
   return (

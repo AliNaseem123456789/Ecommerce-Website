@@ -23,30 +23,36 @@ const getFullImageUrl = (imagePath) => {
   return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
 };
 
-// ========== Fetch image for a product ==========
-const getProductImage = async (productId, asin) => {
+// ========== Fetch ALL images for a product (same as Shop.jsx) ==========
+const getProductImages = async (productId, asin) => {
   try {
     let query = supabase
       .from("product_images")
-      .select("image_url")
-      .eq("image_type", "main");
+      .select("*")
+      .order("image_number", { ascending: true });
     
     if (asin) {
       query = query.eq("asin", asin);
+      console.log(`Wishlist: Querying by ASIN: ${asin}`);
     } else {
       query = query.eq("product_id", productId);
+      console.log(`Wishlist: Querying by product_id: ${productId}`);
     }
     
-    const { data, error } = await query.maybeSingle();
+    const { data, error } = await query;
     
-    if (data && !error && data.image_url) {
-      return getFullImageUrl(data.image_url);
+    if (data && !error && data.length > 0) {
+      // Return all image URLs (main + additional)
+      const imageUrls = data.map(img => getFullImageUrl(img.image_url));
+      console.log(`Wishlist: Found ${imageUrls.length} images for ${asin || productId}`);
+      return imageUrls;
     }
     
-    return null;
+    console.log(`Wishlist: No images found for ${asin || productId}`);
+    return [];
   } catch (error) {
-    console.error("Error fetching product image:", error);
-    return null;
+    console.error("Error fetching product images:", error);
+    return [];
   }
 };
 
@@ -76,11 +82,14 @@ export default function Wishlist() {
       } else {
         setProducts(data);
         
-        // Fetch images for each product
+        // Fetch images for each product (using same logic as Shop)
         const images = {};
         for (const product of data) {
-          const imageUrl = await getProductImage(product.product_id, product.asin);
-          images[product.product_id] = imageUrl || "https://via.placeholder.com/100";
+          const imageUrls = await getProductImages(product.product_id, product.asin);
+          // Use the first image (main) for wishlist display
+          images[product.product_id] = imageUrls.length > 0 
+            ? imageUrls[0] 
+            : "https://via.placeholder.com/100";
         }
         setProductImages(images);
       }

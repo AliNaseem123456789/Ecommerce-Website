@@ -8,28 +8,23 @@ import { supabase } from "../pages/SupabaseClient";
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
   
-  // If it's already a full URL, return as is
   if (imagePath.startsWith('http')) {
     return imagePath;
   }
   
-  // Your Supabase storage base URL
   const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
-  
-  // Remove leading slash if present
   const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
   
-  // Return full URL
   return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
 };
 
-// ========== Fetch image for a product ==========
-const getProductImage = async (productId, asin) => {
+// ========== Fetch ALL images for a product (same as Shop.jsx) ==========
+const getProductImages = async (productId, asin) => {
   try {
     let query = supabase
       .from("product_images")
-      .select("image_url")
-      .eq("image_type", "main");
+      .select("*")
+      .order("image_number", { ascending: true });
     
     if (asin) {
       query = query.eq("asin", asin);
@@ -37,16 +32,18 @@ const getProductImage = async (productId, asin) => {
       query = query.eq("product_id", productId);
     }
     
-    const { data, error } = await query.maybeSingle();
+    const { data, error } = await query;
     
-    if (data && !error && data.image_url) {
-      return getFullImageUrl(data.image_url);
+    if (data && !error && data.length > 0) {
+      // Return all image URLs (main + additional)
+      const imageUrls = data.map(img => getFullImageUrl(img.image_url));
+      return imageUrls;
     }
     
-    return null;
+    return [];
   } catch (error) {
-    console.error("Error fetching product image:", error);
-    return null;
+    console.error("Error fetching product images:", error);
+    return [];
   }
 };
 
@@ -57,13 +54,16 @@ export default function Cart() {
   const [productImages, setProductImages] = useState({});
 
   useEffect(() => {
-    // Fetch images for all cart items
+    // Fetch images for all cart items (using same logic as Shop)
     const fetchImages = async () => {
       const images = {};
       for (const item of cartItems) {
         const product = item.products;
-        const imageUrl = await getProductImage(product.product_id, product.asin);
-        images[product.product_id] = imageUrl || "https://via.placeholder.com/100";
+        // Get all images, but we'll just use the first one for cart
+        const imageUrls = await getProductImages(product.product_id, product.asin);
+        images[product.product_id] = imageUrls.length > 0 
+          ? imageUrls[0]  // Use first image (main)
+          : "https://via.placeholder.com/100";
       }
       setProductImages(images);
     };
