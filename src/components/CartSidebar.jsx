@@ -1,17 +1,84 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { CartContext } from "./CartContext";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../pages/SupabaseClient";
+
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Your Supabase storage base URL
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  
+  // Remove leading slash if present
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Return full URL
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+
+// ========== Fetch image for a product ==========
+const getProductImage = async (productId, asin) => {
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("image_url")
+      .eq("image_type", "main");
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+    } else {
+      query = query.eq("product_id", productId);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    
+    if (data && !error && data.image_url) {
+      return getFullImageUrl(data.image_url);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching product image:", error);
+    return null;
+  }
+};
 
 export default function CartSidebar({ onClose }) {
   const { cartItems, updateQuantity, removeFromCart } = useContext(CartContext);
   const navigate = useNavigate();
+  
+  const [productImages, setProductImages] = useState({});
+
+  useEffect(() => {
+    // Fetch images for all cart items
+    const fetchImages = async () => {
+      const images = {};
+      for (const item of cartItems) {
+        const product = item.products;
+        const imageUrl = await getProductImage(product.product_id, product.asin);
+        images[product.product_id] = imageUrl || "https://via.placeholder.com/80";
+      }
+      setProductImages(images);
+    };
+    
+    if (cartItems.length > 0) {
+      fetchImages();
+    }
+  }, [cartItems]);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.products.price * item.quantity,
     0
   );
 
+  // Fallback local image function (only if needed)
   const getLocalImage = (id) => {
     try {
       return new URL(`/src/assets/products/${id}.jpeg`, import.meta.url).href;
@@ -94,8 +161,10 @@ export default function CartSidebar({ onClose }) {
           }}
         >
           {cartItems.map((item) => {
-            const img = getLocalImage(item.products.product_id);
-
+            const product = item.products;
+            // Use Supabase image if available, fallback to local
+            const img = productImages[product.product_id] || getLocalImage(product.product_id);
+            
             return (
               <div
                 key={item.cart_item_id}
@@ -109,7 +178,11 @@ export default function CartSidebar({ onClose }) {
               >
                 <img
                   src={img}
-                  alt=""
+                  alt={product.name}
+                  onError={(e) => {
+                    console.error(`Failed to load: ${img}`);
+                    e.target.src = "https://via.placeholder.com/80";
+                  }}
                   style={{
                     width: "70px",
                     height: "70px",
@@ -120,11 +193,11 @@ export default function CartSidebar({ onClose }) {
 
                 <div style={{ flex: 1 }}>
                   <p style={{ fontWeight: 500, marginBottom: "4px" }}>
-                    {item.products.name.slice(0, 50)}...
+                    {product.name.slice(0, 50)}...
                   </p>
 
                   <p style={{ color: "#1a73e8", marginBottom: "8px" }}>
-                    ${item.products.price}
+                    ${product.price}
                   </p>
 
                   {/* Quantity Controls */}
@@ -139,6 +212,7 @@ export default function CartSidebar({ onClose }) {
                         border: "1px solid #ddd",
                         borderRadius: "50%",
                         background: "white",
+                        cursor: "pointer",
                       }}
                     >
                       –
@@ -156,6 +230,7 @@ export default function CartSidebar({ onClose }) {
                         border: "1px solid #ddd",
                         borderRadius: "50%",
                         background: "white",
+                        cursor: "pointer",
                       }}
                     >
                       +
@@ -196,31 +271,27 @@ export default function CartSidebar({ onClose }) {
           </div>
 
           <button
-  onClick={() => {
-    onClose();          // close sidebar
-    navigate("/checkout"); // go to checkout page
-  }}
-  style={{
-    width: "100%",
-    padding: "12px",
-    borderRadius: "22px",
-    background: "black",
-    color: "white",
-    fontWeight: "bold",
-    cursor: "pointer",
-    marginBottom: "10px",
-  }}
->
-  CHECKOUT
-</button>
-
-
-
-
+            onClick={() => {
+              onClose();          // close sidebar
+              navigate("/checkout"); // go to checkout page
+            }}
+            style={{
+              width: "100%",
+              padding: "12px",
+              borderRadius: "22px",
+              background: "black",
+              color: "white",
+              fontWeight: "bold",
+              cursor: "pointer",
+              marginBottom: "10px",
+            }}
+          >
+            CHECKOUT
+          </button>
           <button
             onClick={() => {
               onClose();
-              navigate("/cart"); // go to main cart page
+              navigate("/cart"); 
             }}
             style={{
               width: "100%",

@@ -5,7 +5,6 @@ export default function LiveViewers() {
   const [viewers, setViewers] = useState(0);
 
   const generateRandom = () => {
-    // realistic e-commerce range (12–87)
     return Math.floor(Math.random() * 75) + 12;
   };
 

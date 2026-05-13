@@ -1,7 +1,7 @@
 import { supabase } from "../pages/SupabaseClient";
 
 export async function addToCart(user_id, product_id) {
-  console.log("Attempting to add to cart...");  // debug
+  console.log("Attempting to add to cart...");  
 
   const { data: existing, error: findError } = await supabase
     .from("cart_items")

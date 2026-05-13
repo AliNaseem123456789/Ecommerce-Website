@@ -117,7 +117,6 @@ export default function CheckoutGuest() {
           onFocus={(e) => (e.target.style.border = "1px solid #fb923c")}
           onBlur={(e) => (e.target.style.border = "1px solid #ccc")}
         />
-
         {/* Continue Button */}
         <button
           style={{
@@ -137,7 +136,6 @@ export default function CheckoutGuest() {
         >
           Checkout As Guest
         </button>
-
         {/* Divider */}
         <div
           style={{
@@ -146,10 +144,7 @@ export default function CheckoutGuest() {
             alignItems: "center",
           }}
         >
-          
         </div>
-
-      
       </div>
     </div>
   );

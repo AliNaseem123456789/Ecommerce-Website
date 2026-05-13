@@ -19,9 +19,7 @@ export default function Account() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
-  // ------------------------------------------------------
   // LOAD ORDERS
-  // ------------------------------------------------------
   const loadOrders = async () => {
     if (!user?.id) return;
 
@@ -44,10 +42,7 @@ export default function Account() {
     if (!error) setOrders(data || []);
     setLoadingOrders(false);
   };
-
-  // ------------------------------------------------------
   // RENDER TAB LOGIC
-  // ------------------------------------------------------
   const renderTab = () => {
     const key = activeTab.toLowerCase().trim(); // normalize
 
@@ -86,10 +81,7 @@ export default function Account() {
         return <DashboardTab />;
     }
   };
-
-  // ------------------------------------------------------
   // MAIN UI
-  // ------------------------------------------------------
   return (
     <div style={{ display: "flex", minHeight: "80vh", background: "#fff" }}>
       <Sidebar

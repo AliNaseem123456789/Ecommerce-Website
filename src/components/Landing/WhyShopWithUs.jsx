@@ -1,4 +1,3 @@
-import React from "react";
 import { FaCheckCircle, FaTruck, FaUndo, FaLock } from "react-icons/fa";
 
 export default function ShopWithConfidence() {

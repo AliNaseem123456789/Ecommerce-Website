@@ -1,15 +1,84 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { CartContext } from "../components/CartContext";
 import { Pencil, Truck, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../pages/SupabaseClient";
+
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Your Supabase storage base URL
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  
+  // Remove leading slash if present
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Return full URL
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+
+// ========== Fetch image for a product ==========
+const getProductImage = async (productId, asin) => {
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("image_url")
+      .eq("image_type", "main");
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+    } else {
+      query = query.eq("product_id", productId);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    
+    if (data && !error && data.image_url) {
+      return getFullImageUrl(data.image_url);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching product image:", error);
+    return null;
+  }
+};
+
 export default function Cart() {
   const { cartItems, updateQuantity, removeFromCart } = useContext(CartContext);
- const navigate = useNavigate();
+  const navigate = useNavigate();
+  
+  const [productImages, setProductImages] = useState({});
+
+  useEffect(() => {
+    // Fetch images for all cart items
+    const fetchImages = async () => {
+      const images = {};
+      for (const item of cartItems) {
+        const product = item.products;
+        const imageUrl = await getProductImage(product.product_id, product.asin);
+        images[product.product_id] = imageUrl || "https://via.placeholder.com/100";
+      }
+      setProductImages(images);
+    };
+    
+    if (cartItems.length > 0) {
+      fetchImages();
+    }
+  }, [cartItems]);
+
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.products.price * item.quantity,
     0
   );
 
+  // Fallback local image function (only if needed)
   const getLocalImage = (id) => {
     try {
       return new URL(`/src/assets/products/${id}.jpeg`, import.meta.url).href;
@@ -78,7 +147,10 @@ export default function Cart() {
 
         {/* PRODUCTS */}
         {cartItems.map((item) => {
-          const imageUrl = getLocalImage(item.products.product_id);
+          const product = item.products;
+          // Use Supabase image if available, fallback to local
+          const imageUrl = productImages[product.product_id] || getLocalImage(product.product_id);
+          
           return (
             <div
               key={item.cart_item_id}
@@ -96,7 +168,11 @@ export default function Cart() {
               <div style={{ display: "flex", alignItems: "center", flex: 3, gap: "15px" }}>
                 <img
                   src={imageUrl}
-                  alt={item.products.name}
+                  alt={product.name}
+                  onError={(e) => {
+                    console.error(`Failed to load: ${imageUrl}`);
+                    e.target.src = "https://via.placeholder.com/100";
+                  }}
                   style={{
                     width: "100px",
                     height: "100px",
@@ -106,7 +182,7 @@ export default function Cart() {
                 />
                 <div>
                   <p style={{ fontSize: "16px", marginBottom: "6px" }}>
-                    {item.products.name}
+                    {product.name}
                   </p>
                   <button
                     onClick={() => removeFromCart(item.cart_item_id)}
@@ -135,7 +211,7 @@ export default function Cart() {
                   gap: "10px",
                 }}
               >
-                <div>${item.products.price.toFixed(2)}</div>
+                <div>${product.price.toFixed(2)}</div>
 
                 <div
                   style={{
@@ -177,7 +253,7 @@ export default function Cart() {
                 </div>
 
                 <div style={{ fontWeight: "bold", color: "#0095ff" }}>
-                  ${(item.products.price * item.quantity).toFixed(2)}
+                  ${(product.price * item.quantity).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -252,7 +328,7 @@ export default function Cart() {
             </div>
 
             <button
-            onClick={()=>navigate("/checkout")}
+              onClick={() => navigate("/checkout")}
               style={{
                 width: "100%",
                 padding: "12px",

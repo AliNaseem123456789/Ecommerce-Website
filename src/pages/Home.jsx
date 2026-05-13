@@ -1,72 +1,102 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import { CartContext } from "../components/CartContext";
 import ProductCard from "../components/ProductCard";
 import { supabase } from "../pages/SupabaseClient";
-import HeroBanner from "../components/Landing/HeroSection";
 import BrandStatement from "../components/Landing/BrandStatements";
-import Testimonials from "../components/Landing/Testimonials";
 import WhyShopWithUs from "../components/Landing/WhyShopWithUs";
-// import ProductSlider from "../components/Landing/ProductSlider";
 import ProductSlider from "../components/Landing/ProductSlider";
-import hero3 from "../assets/banners/flowers.jpeg";
-import hero4 from "../assets/banners/hero4.jpeg";
-import hero5 from "../assets/banners/hero5.jpeg";
-import hero6 from "../assets/banners/hero6.jpeg";
-import hero7 from "../assets/banners/hero7.jpeg";
-
 import product1 from "../assets/banners/product1banner.png";
 import product2 from "../assets/banners/product2banner.png";
 import product3 from "../assets/banners/product3banner.png";
-
 import SideBySide from "../components/Landing/SideBySide";
-import LandingNavbar from "../components/Landing/LandingNavbar";
 import MainBanner from "../components/Landing/MainBanner";
-import LandingProductCard from "../components/Landing/LandingProductCard";  // ⭐ NEW IMPORT
+
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Your Supabase storage base URL
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  
+  // Remove leading slash if present
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Return full URL
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+
+// ========== Fetch all images for a product ==========
+const getProductImages = async (productId, asin) => {
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("*")
+      .order("image_number", { ascending: true });
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+    } else {
+      query = query.eq("product_id", productId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (data && !error && data.length > 0) {
+      // Convert relative paths to full Supabase URLs
+      const imageUrls = data.map(img => getFullImageUrl(img.image_url));
+      return imageUrls;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("Error fetching product images:", error);
+    return [];
+  }
+};
 
 export default function Home() {
   const { addToCart } = useContext(CartContext);
-  const navigate = useNavigate();
-
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const isMobile = windowWidth < 768;
-
-  const [currentHero, setCurrentHero] = useState(0);
-  const heroImages = [hero3, hero4, hero5, hero6, hero7];
-
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const visibleCount = isMobile ? 2 : 4;
   const [slideIndex, setSlideIndex] = useState(0);
 
-  // ⭐ NEW: Recommended Products State
+  // Recommended Products State
   const [recommendedProducts, setRecommendedProducts] = useState([]);
 
   useEffect(() => {
     fetchData();
-    fetchRecommendations(); // ⭐ load recommended products
+    fetchRecommendations();
 
     const resizeHandler = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", resizeHandler);
     return () => window.removeEventListener("resize", resizeHandler);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentHero((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // ⭐ FETCH RECOMMENDATIONS
+  // FETCH RECOMMENDATIONS
   async function fetchRecommendations() {
     const { data, error } = await supabase.from("products").select("*").limit(12);
     if (!error && data) {
-      const shuffled = data.sort(() => 0.5 - Math.random());
+      // Process recommended products with images
+      const recommendedWithImages = await Promise.all(data.map(async (product) => {
+        const productImages = await getProductImages(product.product_id, product.asin);
+        return {
+          ...product,
+          images: productImages
+        };
+      }));
+      const shuffled = recommendedWithImages.sort(() => 0.5 - Math.random());
       setRecommendedProducts(shuffled.slice(0, 6));
     }
   }
@@ -87,10 +117,15 @@ export default function Home() {
         categoryMap[cat.category_id] = cat.name;
       });
 
-      const extended = (prodData || []).map((p) => ({
-        ...p,
-        staticImages: [`/assets/products/${p.product_id}/main.jpeg`],
-        categoryName: categoryMap[p.category_id] || "Uncategorized",
+      // Process products with images from Supabase
+      const extended = await Promise.all((prodData || []).map(async (p) => {
+        const productImages = await getProductImages(p.product_id, p.asin);
+        
+        return {
+          ...p,
+          images: productImages,
+          categoryName: categoryMap[p.category_id] || "Uncategorized",
+        };
       }));
 
       setProducts(extended);
@@ -132,7 +167,6 @@ export default function Home() {
 
   return (
     <>
-      {/* <LandingNavbar /> */}
       <MainBanner
         heroImages={[
           {
@@ -158,14 +192,10 @@ export default function Home() {
           },
         ]}
       />
-
-     
-
       <section style={{ textAlign: "center", marginTop: 40 }}>
         <h2 style={styles.sectionTitle}>All Products</h2>
       </section>
 
-      {/* REST OF YOUR ORIGINAL CODE BELOW — UNCHANGED */}
       <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
         {/* CATEGORY FILTER */}
         <section style={{ marginTop: 30 }}>
@@ -279,57 +309,53 @@ export default function Home() {
           )}
         </section>
       </div>
-<section
-  style={{
-    background: "#f9fafb",   // Your desired section BG
-    padding: "60px 0",
-  }}
->
-      <SideBySide />
-      <BrandStatement />
 
-<section
-  style={{
-    width: "100%",
-    padding: "60px 0",
-    textAlign: "center",
-    background: "white",
-  }}
->
-  {/* Heading */}
-  <h2
-    style={{
-      fontSize: "34px",
-      fontWeight: "700",
-      fontFamily: "Poppins, sans-serif",
-      marginBottom: "10px",
-      color: "#111",
-    }}
-  >
-    Best Sellers
-  </h2>
+      <section
+        style={{
+          background: "#f9fafb",  
+          padding: "60px 0",
+        }}
+      >
+        <SideBySide />
+        <BrandStatement />
+        <section
+          style={{
+            width: "100%",
+            padding: "60px 0",
+            textAlign: "center",
+            background: "white",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "34px",
+              fontWeight: "700",
+              fontFamily: "Poppins, sans-serif",
+              marginBottom: "10px",
+              color: "#111",
+            }}
+          >
+            Best Sellers
+          </h2>
+          <p
+            style={{
+              fontSize: "16px",
+              fontWeight: "400",
+              color: "#555",
+              maxWidth: "500px",
+              margin: "0 auto 40px auto",
+              lineHeight: "1.6",
+            }}
+          >
+            Our most loved products, hand-picked and trending right now.
+          </p>
 
-  {/* Subtitle (OPTIONAL – looks premium) */}
-  <p
-    style={{
-      fontSize: "16px",
-      fontWeight: "400",
-      color: "#555",
-      maxWidth: "500px",
-      margin: "0 auto 40px auto",
-      lineHeight: "1.6",
-    }}
-  >
-    Our most loved products, hand-picked and trending right now.
-  </p>
-
-  {/* Product Slider */}
-  <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 20px" }}>
-    <ProductSlider products={products} />
-  </div>
-</section>
-      {/* <Testimonials /> */}
-      <WhyShopWithUs />
+          {/* Product Slider - Pass products with images */}
+          <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 20px" }}>
+            <ProductSlider products={products} />
+          </div>
+        </section>
+        <WhyShopWithUs />
       </section>
     </>
   );

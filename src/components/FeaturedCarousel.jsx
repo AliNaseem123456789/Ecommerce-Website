@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import ProductCard from "../components/ProductCard";
-
+import ProductCard from "../components/ProductCard"
 export default function FeaturedCarousel({ products, addToCart }) {
   if (!products || products.length === 0) {
     return <div style={{ textAlign: "center", padding: "20px" }}>No products available</div>;
   }
-
   // Only show max 9 slides
   const limitedProducts = products.slice(0, 9);
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const length = limitedProducts.length;
   const timeoutRef = useRef(null);
-
   // Auto slide
   useEffect(() => {
     resetTimeout();

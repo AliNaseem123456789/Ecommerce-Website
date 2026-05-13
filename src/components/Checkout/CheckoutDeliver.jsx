@@ -1,5 +1,4 @@
 // components/Checkout/CheckoutDeliver.jsx
-import React from "react";
 import {
   Box,
   Grid,

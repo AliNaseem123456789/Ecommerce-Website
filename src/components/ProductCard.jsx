@@ -10,52 +10,20 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const id = product.product_id;
 
-  // ✅ Simple image loader for your exact pattern: 123.jpeg and 123-1.jpeg
-  const createImageUrl = (filename) => {
-    try {
-      return new URL(`/src/assets/products/${filename}`, import.meta.url).href;
-    } catch {
-      return null;
-    }
-  };
-
-  // ✅ SIMPLE VERSION: Only look for your exact pattern
+  // ✅ FIXED: Use the images array from product (passed from Shop.jsx)
   const images = useMemo(() => {
-    const imageUrls = [];
-    
-    // Try main image: 123.jpeg
-    const mainImage = createImageUrl(`${id}.jpeg`);
-    if (mainImage) {
-      imageUrls.push(mainImage);
+    // If product has images array from Supabase, use it
+    if (product.images && product.images.length > 0) {
+      console.log(`Product ${id} - Using ${product.images.length} Supabase images`);
+      return product.images;
     }
     
-    // Try hover image: 123-1.jpeg
-    const hoverImage = createImageUrl(`${id}-1.jpeg`);
-    if (hoverImage) {
-      imageUrls.push(hoverImage);
-    }
-    
-    // Try alternative extension: 123.jpg and 123-1.jpg
-    const mainImageAlt = createImageUrl(`${id}.jpg`);
-    if (mainImageAlt && !imageUrls.includes(mainImageAlt)) {
-      imageUrls.push(mainImageAlt);
-    }
-    
-    const hoverImageAlt = createImageUrl(`${id}-1.jpg`);
-    if (hoverImageAlt && !imageUrls.includes(hoverImageAlt)) {
-      imageUrls.push(hoverImageAlt);
-    }
-    
-    // Fallback to placeholder if no images found
-    if (imageUrls.length === 0) {
-      imageUrls.push("https://via.placeholder.com/300");
-    }
-    
-    // console.log(`Product ${id} - Images found:`, imageUrls.length, imageUrls); // Debug
-    return imageUrls;
-  }, [id]);
+    // Fallback to placeholder if no images
+    console.log(`Product ${id} - No images found, using placeholder`);
+    return ["https://via.placeholder.com/300"];
+  }, [id, product.images]);
 
-  // ✅ Show 2nd image on hover if available
+  // Show 2nd image on hover if available
   const displayedImage = hover && images.length > 1 ? images[1] : images[0];
 
   const isWishlisted = wishlist.includes(id);
@@ -119,7 +87,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             zIndex: 10,
           }}
         >
-          {/* COMPARE */}
           <div
             style={iconStyle("compare")}
             onMouseEnter={() => setIconHover("compare")}
@@ -129,7 +96,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             <FaBalanceScale size={16} />
           </div>
 
-          {/* QUICK VIEW */}
           <div
             style={iconStyle("quick")}
             onMouseEnter={() => setIconHover("quick")}
@@ -143,7 +109,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
             <FaEye size={16} />
           </div>
 
-          {/* WISHLIST */}
           <div
             style={iconStyle("wishlist", isWishlisted)}
             onMouseEnter={() => setIconHover("wishlist")}
@@ -167,7 +132,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         </div>
       )}
 
-      {/* PRODUCT LINK */}
       <Link to={`/product/${id}`} style={{ textDecoration: "none", color: "inherit" }}>
         <div>
           {/* PRODUCT IMAGE */}
@@ -179,25 +143,8 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
               justifyContent: "center",
               alignItems: "center",
               transition: "0.3s",
-              position: "relative", // Added for debugging
             }}
           >
-           
-            {/* <div style={{
-              position: "absolute",
-              top: "5px",
-              left: "5px",
-              background: "rgba(0,0,0,0.7)",
-              color: "white",
-              padding: "2px 6px",
-              borderRadius: "4px",
-              fontSize: "10px",
-              zIndex: 5,
-              display: hover ? "block" : "none",
-            }}>
-              {images.length > 1 ? `Hover: ${images[1]}` : "No hover image"}
-            </div> */}
-            
             <img
               src={displayedImage}
               alt={product.name}
@@ -262,7 +209,6 @@ export default function ProductCard({ product, addToCart, onQuickView }) {
         </div>
       </Link>
 
-      {/* ADD TO CART BUTTON */}
       <button
         onClick={(e) => {
           e.preventDefault();

@@ -16,6 +16,54 @@ import product1 from "../assets/banners/product1banner.png";
 import product2 from "../assets/banners/product2banner.png";
 import product3 from "../assets/banners/product3banner.png";
 
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Your Supabase storage base URL
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  
+  // Remove leading slash if present
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Return full URL
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+
+// ========== Fetch all images for a product ==========
+const getProductImages = async (productId, asin) => {
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("*")
+      .order("image_number", { ascending: true });
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+    } else {
+      query = query.eq("product_id", productId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (data && !error && data.length > 0) {
+      // Convert relative paths to full Supabase URLs
+      const imageUrls = data.map(img => getFullImageUrl(img.image_url));
+      return imageUrls;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("Error fetching product images:", error);
+    return [];
+  }
+};
+
 export default function LandingPage() {
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
@@ -60,7 +108,16 @@ export default function LandingPage() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    setAllProducts(data || []);
+    // Process products with images
+    const productsWithImages = await Promise.all((data || []).map(async (product) => {
+      const productImages = await getProductImages(product.product_id, product.asin);
+      return {
+        ...product,
+        images: productImages
+      };
+    }));
+
+    setAllProducts(productsWithImages);
     setIsLoading(false);
   }
 
@@ -70,7 +127,16 @@ export default function LandingPage() {
       .select("*")
       .in("product_id", FEATURED_IDS);
 
-    setFeaturedProducts(data || []);
+    // Process featured products with images
+    const featuredWithImages = await Promise.all((data || []).map(async (product) => {
+      const productImages = await getProductImages(product.product_id, product.asin);
+      return {
+        ...product,
+        images: productImages
+      };
+    }));
+
+    setFeaturedProducts(featuredWithImages);
   }
 
   const filteredAllProducts =
@@ -116,7 +182,7 @@ export default function LandingPage() {
     
     const interval = setInterval(() => {
       handleNextFeatured();
-    }, 5000); // Auto-slide every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [featuredProducts.length, featuredVisibleCount, featuredIndex]);
@@ -258,7 +324,7 @@ export default function LandingPage() {
                 style={{ 
                   minWidth: `${100 / visibleCount}%`, 
                   padding: "0 8px",
-                  marginBottom: "30px" // ADDED MARGIN
+                  marginBottom: "30px"
                 }}
               >
                 <ProductCard product={product} addToCart={addToCart} />
@@ -270,15 +336,12 @@ export default function LandingPage() {
 
       {/* MAIN GRAY BACKGROUND SECTION */}
       <section style={styles.graySection}>
-        {/* Side sections have their own white backgrounds */}
         <SideBySide />
-        
-        {/* Add spacing between sections */}
         <div style={styles.sectionSpacing}>
           <BrandStatement />
         </div>
 
-        {/* BEST SELLERS - This needs white background for contrast */}
+        {/* BEST SELLERS */}
         <section style={styles.bestSellersSection}>
           <h2 style={styles.bestTitle}>Best Sellers</h2>
           <p style={styles.bestSubtitle}>
@@ -287,7 +350,6 @@ export default function LandingPage() {
 
           {/* Slider Container */}
           <div style={styles.sliderContainer}>
-            {/* Left Arrow - Only show if there are more items than visible */}
             {featuredProducts.length > featuredVisibleCount && (
               <button 
                 onClick={handlePrevFeatured}
@@ -298,7 +360,6 @@ export default function LandingPage() {
               </button>
             )}
 
-            {/* Slider Row */}
             <div style={styles.sliderRow}>
               {getVisibleFeatured().map((product, index) => (
                 <div
@@ -307,7 +368,7 @@ export default function LandingPage() {
                     minWidth: `${100 / featuredVisibleCount}%`,
                     padding: "0 8px",
                     transition: "transform 0.5s ease",
-                    marginBottom: "30px" // ADDED MARGIN
+                    marginBottom: "30px"
                   }}
                 >
                   <LandingProductCard product={product} />
@@ -315,7 +376,6 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Right Arrow - Only show if there are more items than visible */}
             {featuredProducts.length > featuredVisibleCount && (
               <button 
                 onClick={handleNextFeatured}
@@ -336,7 +396,6 @@ export default function LandingPage() {
                 <button
                   key={i}
                   onClick={() => {
-                    // Calculate starting index for this dot
                     const startIndex = i * featuredVisibleCount;
                     setFeaturedIndex(startIndex);
                   }}
@@ -353,7 +412,6 @@ export default function LandingPage() {
           )}
         </section>
 
-        {/* Add spacing before WhyShopWithUs */}
         <div style={styles.sectionSpacing}>
           <WhyShopWithUs />
         </div>
@@ -379,7 +437,6 @@ const styles = {
     marginBottom: 20,
   },
 
-  // Main gray background section
   graySection: {
     background: "#f9fafb",
     width: "100%",
@@ -387,7 +444,6 @@ const styles = {
     paddingBottom: "60px",
   },
 
-  // White section within gray area (like Best Sellers)
   bestSellersSection: {
     background: "white",
     width: "100%",
@@ -400,13 +456,11 @@ const styles = {
     position: "relative",
   },
 
-  // Spacing between components within gray section
   sectionSpacing: {
     marginTop: "60px",
     marginBottom: "60px",
   },
 
-  /* Slider Styles */
   sliderContainer: {
     position: "relative",
     maxWidth: "1400px",
@@ -414,7 +468,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "20px 0", // ADDED PADDING
+    padding: "20px 0",
   },
 
   arrowButton: {
@@ -441,7 +495,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     gap: "8px",
-    marginTop: "40px", // INCREASED MARGIN
+    marginTop: "40px",
   },
 
   dot: {
@@ -461,7 +515,6 @@ const styles = {
     width: "100%",
   },
 
-  /* Desktop Tabs */
   tabsWrapper: {
     width: "100%",
     display: "flex",
@@ -484,7 +537,6 @@ const styles = {
     whiteSpace: "nowrap",
   },
 
-  /* Mobile Bubbles */
   mobileBubbleWrapper: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
@@ -514,7 +566,7 @@ const styles = {
 
   mobileCardWrapper: {
     transform: "scale(0.9)",
-    marginBottom: "20px", // ADDED MARGIN
+    marginBottom: "20px",
   },
 
   bestTitle: {

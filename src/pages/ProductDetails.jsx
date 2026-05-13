@@ -2,13 +2,12 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "./SupabaseClient";
 import { CartContext } from "../components/CartContext";
-import { WishlistContext } from "../components/WishlistContext"; // ⭐ ADDED
+import { WishlistContext } from "../components/WishlistContext";
 import ReviewModal from "../components/ReviewModal";
 import QuestionModal from "../components/QuestionModal";
 import logo from "../assets/Logos/paycard2.png";
 import LiveViewers from "../components/LiveViewers";
 import Breadcrumbs from "../components/Breadcrumbs";
-
 
 // MUI
 import {
@@ -23,9 +22,50 @@ import {
   IconButton,
 } from "@mui/material";
 
-// Icons for Wishlist
-// import { FaStar, FaRegStar } from "react-icons/fa"; // ⭐ ADDED
 import { FaStar, FaRegStar, FaQuestionCircle, FaShareAlt } from "react-icons/fa";
+
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+
+// ========== Fetch ALL images for a product from Supabase ==========
+const getProductImagesFromDB = async (productId, asin) => {
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("*")
+      .order("image_number", { ascending: true });
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+    } else {
+      query = query.eq("product_id", productId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (data && !error && data.length > 0) {
+      // Convert all images to full URLs
+      const imageUrls = data.map(img => getFullImageUrl(img.image_url));
+      return imageUrls;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("Error fetching product images:", error);
+    return [];
+  }
+};
 
 function ProductDetails() {
   const { id } = useParams();
@@ -38,10 +78,7 @@ function ProductDetails() {
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-
   const { addToCart } = useContext(CartContext);
-
-  // ⭐ Wishlist
   const { wishlist, toggleWishlist } = useContext(WishlistContext);
   const isWishlisted = wishlist.includes(Number(id));
 
@@ -58,7 +95,7 @@ function ProductDetails() {
       .eq("product_id", id)
       .single();
     setProduct(data);
-    loadProductImages(id);
+    await loadProductImages(data);
   };
 
   const fetchReviews = async () => {
@@ -79,38 +116,25 @@ function ProductDetails() {
     setQuestions(data || []);
   };
 
-  const createImageUrl = (filename) => {
-    try {
-      return new URL(`/src/assets/products/${filename}`, import.meta.url).href;
-    } catch {
-      return null;
+  // NEW: Load images from Supabase storage (handles both legacy and ASIN)
+  const loadProductImages = async (product) => {
+    if (!product) return;
+    
+    // Fetch images from product_images table
+    const images = await getProductImagesFromDB(product.product_id, product.asin);
+    
+    if (images.length > 0) {
+      console.log(`Found ${images.length} images for product ${product.product_id}`);
+      setProductImages(images);
+    } else {
+      // Fallback to placeholder
+      console.log(`No images found for product ${product.product_id}`);
+      setProductImages(["https://via.placeholder.com/600x600"]);
     }
-  };
-
-  const loadProductImages = (productId) => {
-    const images = [];
-    const possibleFiles = [`${productId}.jpeg`, `${productId}.jpg`, `${productId}.png`];
-
-    for (let i = 1; i <= 10; i++) {
-      ["-", "_"].forEach((sep) => {
-        ["jpeg", "jpg", "png"].forEach((ext) => {
-          possibleFiles.push(`${productId}${sep}${i}.${ext}`);
-        });
-      });
-    }
-
-    possibleFiles.forEach((file) => {
-      const url = createImageUrl(file);
-      if (url) images.push(url);
-    });
-
-    const uniqueImages = [...new Set(images)];
-    setProductImages(uniqueImages.length ? uniqueImages : ["https://via.placeholder.com/600x600"]);
   };
 
   if (!product)
     return <p style={{ textAlign: "center", marginTop: "50px" }}>Loading...</p>;
-
 
   const modernButtonStyles = {
     borderRadius: "50px",
@@ -120,33 +144,36 @@ function ProductDetails() {
   };
 
   return (
-    
     <Box sx={{ maxWidth: 1300, mx: "auto", p: 3 }}>
       <Breadcrumbs productName={product.name} />
-      {/* TOP SECTION */}
       <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-        {/* LEFT IMAGE SECTION */}
+        
+        {/* LEFT SIDE - IMAGES */}
         <Box sx={{ display: "flex", gap: 2, flex: "1 1 300px", minWidth: 280 }}>
+          
+          {/* THUMBNAIL STRIP - Shows ALL images */}
           {productImages.length > 1 && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, width: 80 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, width: 80, maxHeight: 500, overflowY: "auto" }}>
               {productImages.map((img, index) => (
                 <img
                   key={index}
                   src={img}
-                  alt={"view " + index}
+                  alt={`Thumbnail ${index + 1}`}
                   onClick={() => setSelectedImageIndex(index)}
                   style={{
                     width: 80,
                     height: 80,
                     borderRadius: 10,
-                    border:
-                      selectedImageIndex === index
-                        ? "2px solid #1976d2"
-                        : "1px solid #e0e0e0",
+                    border: selectedImageIndex === index
+                      ? "2px solid #1976d2"
+                      : "1px solid #e0e0e0",
                     cursor: "pointer",
                     objectFit: "cover",
                   }}
-                  onError={(e) => (e.target.style.display = "none")}
+                  onError={(e) => {
+                    console.error(`Failed to load thumbnail: ${img}`);
+                    e.target.style.display = "none";
+                  }}
                 />
               ))}
             </Box>
@@ -155,7 +182,7 @@ function ProductDetails() {
           {/* MAIN IMAGE */}
           <Paper sx={{ p: 2, borderRadius: 3, flexGrow: 1 }}>
             <img
-              src={productImages[selectedImageIndex]}
+              src={productImages[selectedImageIndex] || "https://via.placeholder.com/600x600"}
               alt={product.name}
               style={{
                 width: "100%",
@@ -163,21 +190,36 @@ function ProductDetails() {
                 borderRadius: 14,
                 background: "#f5f5f5",
               }}
-              onError={(e) => (e.target.src = "https://via.placeholder.com/600x600")}
+              onError={(e) => {
+                console.error(`Failed to load main image: ${e.target.src}`);
+                e.target.src = "https://via.placeholder.com/600x600";
+              }}
             />
+            
+            {/* Image Counter */}
+            {productImages.length > 1 && (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  display: "block", 
+                  textAlign: "center", 
+                  mt: 1,
+                  color: "gray"
+                }}
+              >
+                {selectedImageIndex + 1} / {productImages.length} images
+              </Typography>
+            )}
           </Paper>
         </Box>
 
         {/* RIGHT PRODUCT INFO */}
         <Box sx={{ flex: "1 1 300px", minWidth: 280 }}>
-
-          {/* ⭐ PRODUCT TITLE + WISHLIST ⭐ */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography variant="h4" fontWeight={700}>
               {product.name}
             </Typography>
 
-            {/* Wishlist Button */}
             <IconButton
               onClick={() => toggleWishlist(product.product_id)}
               sx={{
@@ -197,7 +239,6 @@ function ProductDetails() {
           <Typography variant="h5" fontWeight={700} color="primary" gutterBottom>
             ${product.price}
           </Typography>
-          
 
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
             <Rating value={product.avg_rating || 0} precision={0.5} readOnly />
@@ -208,7 +249,6 @@ function ProductDetails() {
           {/* QUANTITY + ADD TO CART BUTTONS */}
           <Box sx={{ mb: 3 }}>
             <Stack direction="row" spacing={2} alignItems="center">
-              {/* Add to Cart */}
               <Button
                 fullWidth
                 variant="contained"
@@ -224,7 +264,6 @@ function ProductDetails() {
               </Button>
             </Stack>
 
-            {/* BUY NOW BUTTON */}
             <Button
               fullWidth
               variant="contained"
@@ -239,130 +278,117 @@ function ProductDetails() {
               BUY NOW
             </Button>
 
-            {/* --- ACTION BUTTON ROW (Wishlist / Ask / Share) --- */}
-<Box
-  sx={{
-    display: "flex",
-    justifyContent: "space-between",
-    mt: 3,
-    mb: 3,
-    flexWrap: "wrap",
-  }}
->
-  {/* ⭐ Wishlist */}
-  <Box
-    onClick={() => toggleWishlist(product.product_id)}
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 1,
-      cursor: "pointer",
-      px: 2,
-      py: 1,
-      borderRadius: "25px",
-      transition: "0.2s",
-      "&:hover": { background: "#f3f4f6" },
-    }}
-  >
-    {isWishlisted ? (
-      <FaStar size={20} color="black" />
-    ) : (
-      <FaRegStar size={20} color="black" />
-    )}
-    <Typography
-      sx={{
-        fontSize: 15,
-        fontWeight: 600,
-        color: "black",
-      }}
-    >
-      Wishlist
-    </Typography>
-  </Box>
+            {/* ACTION BUTTON ROW */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                mt: 3,
+                mb: 3,
+                flexWrap: "wrap",
+              }}
+            >
+              <Box
+                onClick={() => toggleWishlist(product.product_id)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  cursor: "pointer",
+                  px: 2,
+                  py: 1,
+                  borderRadius: "25px",
+                  transition: "0.2s",
+                  "&:hover": { background: "#f3f4f6" },
+                }}
+              >
+                {isWishlisted ? (
+                  <FaStar size={20} color="black" />
+                ) : (
+                  <FaRegStar size={20} color="black" />
+                )}
+                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "black" }}>
+                  Wishlist
+                </Typography>
+              </Box>
 
-  {/* ❓ Ask a Question */}
-  <Box
-    onClick={() => setShowQuestionModal(true)}
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 1,
-      cursor: "pointer",
-      px: 2,
-      py: 1,
-      borderRadius: "25px",
-      transition: "0.2s",
-      "&:hover": { background: "#f3f4f6" },
-    }}
-  >
-    <FaQuestionCircle size={20} color="black" />
-    <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Ask a Question</Typography>
-  </Box>
+              <Box
+                onClick={() => setShowQuestionModal(true)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  cursor: "pointer",
+                  px: 2,
+                  py: 1,
+                  borderRadius: "25px",
+                  transition: "0.2s",
+                  "&:hover": { background: "#f3f4f6" },
+                }}
+              >
+                <FaQuestionCircle size={20} color="black" />
+                <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Ask a Question</Typography>
+              </Box>
 
-  {/* 🔗 Share */}
-  <Box
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 1,
-      cursor: "pointer",
-      px: 2,
-      py: 1,
-      borderRadius: "25px",
-      transition: "0.2s",
-      "&:hover": { background: "#f3f4f6" },
-    }}
-    onClick={() => navigator.share?.({ title: product.name })}
-  >
-    <FaShareAlt size={20} color="black" />
-    <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Share</Typography>
-  </Box>
-</Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  cursor: "pointer",
+                  px: 2,
+                  py: 1,
+                  borderRadius: "25px",
+                  transition: "0.2s",
+                  "&:hover": { background: "#f3f4f6" },
+                }}
+                onClick={() => navigator.share?.({ title: product.name })}
+              >
+                <FaShareAlt size={20} color="black" />
+                <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Share</Typography>
+              </Box>
+            </Box>
 
-{/* --- DIVIDER LINE --- */}
-<Box sx={{ borderBottom: "1px solid #e5e7eb", my: 2 }} />
+            {/* DIVIDER LINE */}
+            <Box sx={{ borderBottom: "1px solid #e5e7eb", my: 2 }} />
 
-{/* --- ESTIMATED DELIVERY --- */}
-<Box sx={{ mt: 2, mb: 3 }}>
-  <Typography sx={{ fontSize: 16, fontWeight: 600 }}>
-    Estimated Delivery:
-  </Typography>
-  <Typography sx={{ fontSize: 15, color: "gray" }}>
-    04 - 11 Dec, 2025
-  </Typography>
-</Box>
+            {/* ESTIMATED DELIVERY */}
+            <Box sx={{ mt: 2, mb: 3 }}>
+              <Typography sx={{ fontSize: 16, fontWeight: 600 }}>
+                Estimated Delivery:
+              </Typography>
+              <Typography sx={{ fontSize: 15, color: "gray" }}>
+                04 - 11 Dec, 2025
+              </Typography>
+            </Box>
 
-{/* --- PAYMENT LOGOS WITH GRAY BACKGROUND --- */}
-<Box
-  sx={{
-    background: "#f3f4f6",
-    borderRadius: "12px",
-    p: 2,
-    textAlign: "center",
-    width: "100%",
-  }}
->
-  <img
-    src={logo}
-    alt="Payment Methods"
-    style={{
-      width: "220px",
-      height: "auto",
-      marginBottom: "8px",
-    }}
-  />
-  <Typography sx={{ fontSize: 14, color: "#555" }}>
-    Guaranteed safe & secure checkout
-  </Typography>
-</Box>
-
+            {/* PAYMENT LOGOS */}
+            <Box
+              sx={{
+                background: "#f3f4f6",
+                borderRadius: "12px",
+                p: 2,
+                textAlign: "center",
+                width: "100%",
+              }}
+            >
+              <img
+                src={logo}
+                alt="Payment Methods"
+                style={{
+                  width: "220px",
+                  height: "auto",
+                  marginBottom: "8px",
+                }}
+              />
+              <Typography sx={{ fontSize: 14, color: "#555" }}>
+                Guaranteed safe & secure checkout
+              </Typography>
+            </Box>
           </Box>
-
         </Box>
       </Box>
 
-      
-     
       {/* TABS SECTION */}
       <Box sx={{ mt: 6 }}>
         <Tabs

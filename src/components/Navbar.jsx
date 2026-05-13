@@ -114,9 +114,6 @@ function Navbar() {
     }}
   />
 )}
-
-
-
             <div
               style={{
                 display: "flex",
@@ -160,9 +157,8 @@ function Navbar() {
                   </span>
                 )}
               </div>
-
               <div style={{ position: "relative" }}>
-                {/* ⭐ UPDATED: Use handleCartClick */}
+               
                 <FaShoppingCart
                   style={{ cursor: "pointer" }}
                   title="Cart"
@@ -376,13 +372,7 @@ function Navbar() {
               )}
             </div>
 
-            {/* <Link
-              to="/wishlist"
-              onClick={() => setSidebarOpen(false)}
-              style={{ textDecoration: "none", color: "#111" }}
-            >
-              Wishlist
-            </Link> */}
+         
             <Link
               to="/about-us"
               onClick={() => setSidebarOpen(false)}

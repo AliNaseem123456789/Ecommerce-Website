@@ -5,16 +5,64 @@ import { CartContext } from "../CartContext";
 import { supabase } from "../../pages/SupabaseClient";
 import { X } from "lucide-react";
 
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Your Supabase storage base URL
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  
+  // Remove leading slash if present
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Return full URL
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+
+// ========== Fetch image for a product ==========
+const getProductImage = async (productId, asin) => {
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("image_url")
+      .eq("image_type", "main");
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+    } else {
+      query = query.eq("product_id", productId);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    
+    if (data && !error && data.image_url) {
+      return getFullImageUrl(data.image_url);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching product image:", error);
+    return null;
+  }
+};
+
 export default function WishlistTab() {
   const { wishlist, removeWishlist } = useContext(WishlistContext);
   const { addToCart } = useContext(CartContext);
 
   const [products, setProducts] = useState([]);
+  const [productImages, setProductImages] = useState({});
 
   // FETCH PRODUCT DETAILS FROM SUPABASE
   useEffect(() => {
     if (wishlist.length === 0) {
       setProducts([]);
+      setProductImages({});
       return;
     }
 
@@ -28,12 +76,21 @@ export default function WishlistTab() {
         console.error("Error fetching wishlist products:", error);
       } else {
         setProducts(data);
+        
+        // Fetch images for each product
+        const images = {};
+        for (const product of data) {
+          const imageUrl = await getProductImage(product.product_id, product.asin);
+          images[product.product_id] = imageUrl || "https://via.placeholder.com/100";
+        }
+        setProductImages(images);
       }
     };
 
     fetchProducts();
   }, [wishlist]);
 
+  // Fallback local image function (only if needed)
   const getLocalImage = (id) => {
     try {
       return new URL(`/src/assets/products/${id}.jpeg`, import.meta.url).href;
@@ -85,7 +142,9 @@ export default function WishlistTab() {
         </p>
       ) : (
         products.map((product) => {
-          const imageUrl = getLocalImage(product.product_id);
+          // Use Supabase image if available, fallback to local
+          const imageUrl = productImages[product.product_id] || getLocalImage(product.product_id);
+          
           return (
             <div
               key={product.product_id}
@@ -124,6 +183,10 @@ export default function WishlistTab() {
                 <img
                   src={imageUrl}
                   alt={product.name}
+                  onError={(e) => {
+                    console.error(`Failed to load: ${imageUrl}`);
+                    e.target.src = "https://via.placeholder.com/100";
+                  }}
                   style={{
                     width: "100px",
                     height: "100px",

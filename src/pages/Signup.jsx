@@ -9,11 +9,8 @@ export default function Signup() {
   const navigate = useNavigate();
 
   const handleSignup = async () => {
-    // 1️⃣ Sign up in Supabase Auth
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return alert(error.message);
-
-    // 2️⃣ Insert profile into users1
     await supabase.from("users_test").insert({
       id: data.user.id,
       name,

@@ -1,5 +1,4 @@
 import mugbanner from "../../assets/banners/mugbanner.jpg";
-
 export default function BrandStatement() {
   return (
     <section
@@ -32,7 +31,6 @@ export default function BrandStatement() {
         >
           Crafted With Passion.<br />Made for Your Lifestyle.
         </h2>
-
         <p
           style={{
             fontSize: 18,
@@ -58,7 +56,7 @@ export default function BrandStatement() {
           style={{
             width: "100%",
             borderRadius: 12,
-            objectFit: "contain", // changed from 'cover' to 'contain'
+            objectFit: "contain", 
             maxHeight: 450,
           }}
         />

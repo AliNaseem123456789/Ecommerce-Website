@@ -8,8 +8,6 @@ export const CartProvider = ({ children }) => {
   const [userId, setUserId] = useState(null); // UUID for logged-in or guest
   const [cartItems, setCartItems] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // 1️⃣ Identify logged-in user
   const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -27,7 +25,6 @@ export const CartProvider = ({ children }) => {
     setUserId(guestId);
     return guestId;
   };
-  // 2️⃣ Fetch cart items
   const fetchCart = async (id = userId) => {
     if (!id) return;
 
@@ -38,15 +35,12 @@ export const CartProvider = ({ children }) => {
 
     if (!error && data) setCartItems(data);
   };
-
   useEffect(() => {
     (async () => {
       const id = await getCurrentUserId();
       await fetchCart(id);
     })();
-  }, []);
-
-  // 3️⃣ Add item to cart 
+  }, []); 
   const addToCart = async (product) => {
     if (!userId) return;
 
@@ -83,11 +77,10 @@ export const CartProvider = ({ children }) => {
 
       if (!error && data) setCartItems((prev) => [...prev, data]);
     }
-
     if (window.location.pathname !== "/cart") setIsSidebarOpen(true);
   };
 
-  // 4️⃣ Update quantity
+  //Update quantity
   const updateQuantity = async (cart_item_id, newQty) => {
     if (newQty < 1) return;
 
@@ -106,7 +99,7 @@ export const CartProvider = ({ children }) => {
       );
     }
   };
-  // 5️⃣ Remove from cart
+  //Remove from cart
 
   const removeFromCart = async (cart_item_id) => {
     const { error } = await supabase
@@ -151,22 +144,15 @@ const mergeCart = async (guestId, userId) => {
         .update({ quantity: existing.quantity + item.quantity })
         .eq("cart_item_id", existing.cart_item_id);
     } else {
-      // Product doesn't exist → reassign to userId
       await supabase
         .from("cart_items_test")
         .update({ user_id: userId })
         .eq("cart_item_id", item.cart_item_id);
     }
   }
-
-  // 4. Remove guestId from localStorage
   localStorage.removeItem("guest_user_id");
-
-  // 5. Refresh local cart state
   fetchCart(userId);
 };
-
-
   return (
     <CartContext.Provider
       value={{
@@ -187,135 +173,3 @@ const mergeCart = async (guestId, userId) => {
     </CartContext.Provider>
   );
 };
-
-
-
-// import React, { createContext, useState, useEffect } from "react";
-// import { supabase } from "../pages/SupabaseClient";
-
-// export const CartContext = createContext();
-
-// export const CartProvider = ({ children }) => {
-//   const user_id = 1;
-//   const [cartItems, setCartItems] = useState([]);
-//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-//   const openSidebar = () => {
-//     // ⭐ FIX: Check if we're NOT on the cart page before opening sidebar
-//     if (window.location.pathname !== "/cart") {
-//       setIsSidebarOpen(true);
-//     }
-//   };
-  
-//   const closeSidebar = () => setIsSidebarOpen(false);
-
-//   const fetchCart = async () => {
-//     const { data, error } = await supabase
-//       .from("cart_items")
-//       .select(`cart_item_id, quantity, products(*)`)
-//       .eq("user_id", user_id);
-
-//     if (!error && data) setCartItems(data);
-//   };
-
-//   useEffect(() => {
-//     fetchCart();
-//   }, []);
-
-//   const totalItems = cartItems.reduce(
-//     (sum, item) => sum + (item.quantity || 1),
-//     0
-//   );
-
-//   const addToCart = async (product) => {
-//     const existing = cartItems.find(
-//       (item) => item.products.product_id === product.product_id
-//     );
-
-//     if (existing) {
-//       const { error } = await supabase
-//         .from("cart_items")
-//         .update({ quantity: existing.quantity + 1 })
-//         .eq("cart_item_id", existing.cart_item_id);
-
-//       if (!error) {
-//         setCartItems((prev) =>
-//           prev.map((item) =>
-//             item.cart_item_id === existing.cart_item_id
-//               ? { ...item, quantity: item.quantity + 1 }
-//               : item
-//           )
-//         );
-//       }
-//     } else {
-//       const { data, error } = await supabase
-//         .from("cart_items")
-//         .insert({
-//           user_id,
-//           product_id: product.product_id,
-//           quantity: 1,
-//         })
-//         .select(`cart_item_id, quantity, products(*)`)
-//         .single();
-
-//       if (!error && data) {
-//         setCartItems((prev) => [...prev, data]);
-//       }
-//     }
-
-//     // ⭐ FIXED: Only open sidebar if not on cart page
-//     if (window.location.pathname !== "/cart") {
-//       openSidebar();
-//     }
-//   };
-
-//   const updateQuantity = async (cart_item_id, newQty) => {
-//     if (newQty < 1) return;
-
-//     const { error } = await supabase
-//       .from("cart_items")
-//       .update({ quantity: newQty })
-//       .eq("cart_item_id", cart_item_id);
-
-//     if (!error) {
-//       setCartItems((prev) =>
-//         prev.map((item) =>
-//           item.cart_item_id === cart_item_id
-//             ? { ...item, quantity: newQty }
-//             : item
-//         )
-//       );
-//     }
-//   };
-
-//   const removeFromCart = async (cart_item_id) => {
-//     const { error } = await supabase
-//       .from("cart_items")
-//       .delete()
-//       .eq("cart_item_id", cart_item_id);
-
-//     if (!error) {
-//       setCartItems((prev) =>
-//         prev.filter((item) => item.cart_item_id !== cart_item_id)
-//       );
-//     }
-//   };
-
-//   return (
-//     <CartContext.Provider
-//       value={{
-//         cartItems,
-//         addToCart,
-//         updateQuantity,
-//         removeFromCart,
-//         totalItems,
-//         fetchCart,
-//         isSidebarOpen,
-//         openSidebar,
-//         closeSidebar,
-//       }}
-//     >
-//       {children}
-//     </CartContext.Provider>
-//   );
-// };

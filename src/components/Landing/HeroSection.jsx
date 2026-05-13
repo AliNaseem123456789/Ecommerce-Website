@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function HeroBanner({ heroImages, currentHero, navigate, styles }) {
   return (
     <section style={styles.heroFullScreen}>
@@ -13,7 +11,6 @@ export default function HeroBanner({ heroImages, currentHero, navigate, styles }
           }}
         />
       ))}
-
       <div style={styles.heroButtonWrapper}>
         <button style={styles.heroButton} onClick={() => navigate("/shop")}>
           Shop Now

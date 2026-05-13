@@ -5,10 +5,7 @@ import { CartContext } from "../components/CartContext";
 import { supabase } from "../pages/SupabaseClient";
 import { useLocation } from "react-router-dom";
 import QuickViewModal from "../components/QuickViewModal";
-
-// ---------------------
 // MUI IMPORTS
-// ---------------------
 import {
   Box,
   Typography,
@@ -54,9 +51,103 @@ const HamburgerIcon = (props) => (
   </svg>
 );
 
-// ---------------------
+// Helper function to convert relative paths to full Supabase URLs
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Your Supabase storage base URL (NO trailing quote!)
+  const SUPABASE_STORAGE_URL = 'https://ypoubhaujgmpxrzhbwpt.supabase.co/storage/v1/object/public';
+  
+  // Remove leading slash if present
+  let cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Return full URL
+  return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
+};
+// ========== Fetch all images for a product ==========
+const getProductImages = async (productId, asin) => {
+  console.log(`\n📸 getProductImages called for:`, { productId, asin });
+  
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("*")
+      .order("image_number", { ascending: true });
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+      console.log(`   Querying by ASIN: ${asin}`);
+    } else {
+      query = query.eq("product_id", productId);
+      console.log(`   Querying by product_id: ${productId}`);
+    }
+    
+    const { data, error } = await query;
+    
+    console.log(`   Query returned ${data?.length || 0} records`);
+    
+    if (data && !error) {
+      // Log each image found
+      data.forEach((img, idx) => {
+        console.log(`   📷 Image ${idx + 1}: type=${img.image_type}, number=${img.image_number}, url=${img.image_url}`);
+      });
+      
+      // Convert relative paths to full Supabase URLs
+      const imageUrls = data.map(img => getFullImageUrl(img.image_url));
+      console.log(`   ✅ Returning ${imageUrls.length} full image URLs:`, imageUrls);
+      return imageUrls;
+    }
+    
+    console.log(`   ❌ No images found or error occurred`);
+    return [];
+  } catch (error) {
+    console.error(`   ❌ Error fetching product images:`, error);
+    return [];
+  }
+};
+
+// ========== Get single image URL (fallback) ==========
+const getProductImageUrl = async (productId, asin, imageType = 'main', imageNumber = 1) => {
+  console.log(`🔍 getProductImageUrl called with:`, { productId, asin, imageType, imageNumber });
+  
+  try {
+    let query = supabase
+      .from("product_images")
+      .select("image_url, old_naming, asin")
+      .eq("image_type", imageType);
+    
+    if (asin) {
+      query = query.eq("asin", asin);
+      console.log(`   Querying by ASIN: ${asin}`);
+    } else {
+      query = query.eq("product_id", productId);
+      console.log(`   Querying by product_id: ${productId}`);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    
+    console.log(`   Query result:`, { data, error });
+    
+    if (data && !error) {
+      // Convert to full URL
+      const fullUrl = getFullImageUrl(data.image_url);
+      console.log(`   ✅ Found image URL: ${fullUrl}`);
+      return fullUrl;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`   ❌ Error fetching image URL:`, error);
+    return null;
+  }
+};
+
 // MAIN SHOP COMPONENT
-// ---------------------
 function Shop() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -78,51 +169,105 @@ function Shop() {
   const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
+    console.log("🔄 Shop component mounted, fetching categories...");
     fetchCategories();
   }, []);
 
   useEffect(() => {
+    console.log("🔄 Categories or filters changed, fetching products...");
     if (categories.length > 0) fetchProducts();
   }, [categories, selectedCategories, sort]);
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from("categories").select("*");
-    if (data) setCategories(data);
+    console.log("📁 Fetching categories...");
+    const { data, error } = await supabase.from("categories").select("*");
+    if (error) {
+      console.error("❌ Error fetching categories:", error);
+    } else {
+      console.log(`✅ Fetched ${data?.length || 0} categories:`, data?.map(c => c.name));
+      setCategories(data);
+    }
   };
 
   const fetchProducts = async () => {
+    console.log("\n🛒 Fetching products with filters...");
+    console.log("   Selected categories:", selectedCategories);
+    console.log("   Sort option:", sort);
+    
     let query = supabase.from("products").select("*");
 
     if (selectedCategories.length > 0) {
       query = query.in("category_id", selectedCategories);
+      console.log(`   Filtering by categories: ${selectedCategories.join(', ')}`);
     }
 
-    if (sort === "price_asc") query = query.order("price", { ascending: true });
-    if (sort === "price_desc") query = query.order("price", { ascending: false });
-    if (sort === "rating") query = query.order("avg_rating", { ascending: false });
+    if (sort === "price_asc") {
+      query = query.order("price", { ascending: true });
+      console.log("   Sorting by price: low to high");
+    }
+    if (sort === "price_desc") {
+      query = query.order("price", { ascending: false });
+      console.log("   Sorting by price: high to low");
+    }
+    if (sort === "rating") {
+      query = query.order("avg_rating", { ascending: false });
+      console.log("   Sorting by rating: highest first");
+    }
 
-    const { data } = await query;
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error("❌ Error fetching products:", error);
+      return;
+    }
+    
+    console.log(`✅ Fetched ${data?.length || 0} products from database`);
+    console.log("   Product IDs:", data?.map(p => `${p.product_id} (ASIN: ${p.asin || 'none'})`));
 
-    const extended = (data || []).map((p) => {
-      const formats = ["avif", "webp", "jpg", "jpeg", "png"];
-      const maxImages = 6;
-
-      const staticImages = Array.from({ length: maxImages }).flatMap((_, index) =>
-        formats.map(
-          (ext) =>
-            `/assets/products/${p.product_id}/${index === 0 ? "main" : index}.${ext}`
-        )
-      );
-
+    // Process products with Supabase images
+    console.log("\n🖼️ Processing images for each product...");
+    const extended = await Promise.all((data || []).map(async (p, index) => {
+      console.log(`\n--- Processing product ${index + 1}/${data.length} ---`);
+      console.log(`   Product ID: ${p.product_id}`);
+      console.log(`   ASIN: ${p.asin || 'none'}`);
+      console.log(`   Name: ${p.name?.substring(0, 50)}...`);
+      
       const category = categories.find((c) => c.category_id === p.category_id);
-
-      return {
+      console.log(`   Category: ${category?.name || 'Uncategorized'}`);
+      
+      // Get images from Supabase product_images table
+      const productImages = await getProductImages(p.product_id, p.asin);
+      
+      // Create image URLs array (main + additional)
+      let imageUrls = [];
+      if (productImages.length > 0) {
+        imageUrls = productImages;
+        console.log(`   ✅ Using ${imageUrls.length} images from product_images table`);
+      } else {
+        console.log(`   ⚠️ No images found in product_images, trying fallback...`);
+        const mainImage = await getProductImageUrl(p.product_id, p.asin, 'main');
+        if (mainImage) {
+          imageUrls = [mainImage];
+          console.log(`   ✅ Fallback found main image: ${mainImage}`);
+        } else {
+          console.log(`   ❌ No fallback image found`);
+        }
+      }
+      
+      console.log(`   Final image URLs for this product:`, imageUrls);
+      
+      const extendedProduct = {
         ...p,
-        staticImages,
+        images: imageUrls,
         categoryName: category ? category.name : "Uncategorized",
       };
-    });
+      
+      return extendedProduct;
+    }));
 
+    console.log("\n✅ All products processed!");
+    console.log(`📊 Total products with images: ${extended.filter(p => p.images?.length > 0).length}/${extended.length}`);
+    
     setProducts(extended);
   };
 
@@ -163,7 +308,6 @@ function Shop() {
       </Typography>
 
       <Box display="flex" gap={3}>
-        {/* ---------------- Sidebar (Desktop Only) ---------------- */}
         {!isMobile && (
           <Box width="22%">
             <CategoryFilter
@@ -174,9 +318,7 @@ function Shop() {
           </Box>
         )}
 
-        {/* ---------------- Main Content ---------------- */}
         <Box flex={1}>
-          {/* ---------------- Sorting + Icons Bar ---------------- */}
           <Box
             display="flex"
             justifyContent="space-between"
@@ -190,7 +332,6 @@ function Shop() {
             </Typography>
 
             <Box display="flex" alignItems="center" gap={2}>
-              {/* GRID ICONS */}
               <Box display="flex" gap={1}>
                 {gridOptions.map((item) => {
                   const isActive = grid === item || (grid === 1 && item === "list");
@@ -214,7 +355,6 @@ function Shop() {
                   );
                 })}
               </Box>
-              {/* SORT SELECT */}
               <Select
                 size="small"
                 value={sort}
@@ -233,7 +373,6 @@ function Shop() {
             </Box>
           </Box>
 
-          {/* ---------------- Selected Filter Pills ---------------- */}
           {selectedCategories.length > 0 && (
             <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
               {selectedCategories.map((id) => {
@@ -264,7 +403,6 @@ function Shop() {
                   </Paper>
                 );
               })}
-
               <Typography
                 sx={{ color: "#0284c7", cursor: "pointer", fontWeight: 600 }}
                 onClick={clearAll}
@@ -274,7 +412,6 @@ function Shop() {
             </Box>
           )}
 
-          {/* ---------------- PRODUCT GRID ---------------- */}
           <Box
             display="grid"
             gridTemplateColumns={grid === 1 ? "1fr" : `repeat(${grid}, 1fr)`}
@@ -284,7 +421,7 @@ function Shop() {
             {products.map((p) => (
               <ProductCard
                 key={p.product_id}
-                product={{ ...p, images: p.staticImages }}
+                product={{ ...p, images: p.images }}
                 addToCart={addToCart}
                 onQuickView={setQuickViewProduct}
               />
@@ -293,7 +430,6 @@ function Shop() {
         </Box>
       </Box>
 
-      {/* ---------------- QUICK VIEW MODAL ---------------- */}
       {quickViewProduct && (
         <QuickViewModal
           product={quickViewProduct}

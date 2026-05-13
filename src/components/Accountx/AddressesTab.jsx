@@ -4,17 +4,12 @@ import { supabase } from "../../pages/SupabaseClient";
 
 export default function AddressesTab() {
   const { user } = useContext(AuthContext);
-
   const [billing, setBilling] = useState(null);
   const [shipping, setShipping] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const [formType, setFormType] = useState(null); // "billing" or "shipping"
+  const [formType, setFormType] = useState(null); 
   const [formData, setFormData] = useState({});
-
-  // ---------------------------
   // Load Addresses
-  // ---------------------------
   const loadAddresses = async () => {
     if (!user?.id) return;
 
@@ -34,10 +29,7 @@ export default function AddressesTab() {
   useEffect(() => {
     loadAddresses();
   }, [user]);
-
-  // ---------------------------
   // Start Editing
-  // ---------------------------
   const startEditing = (type) => {
     setFormType(type);
 
@@ -59,10 +51,7 @@ export default function AddressesTab() {
       }
     );
   };
-
-  // ---------------------------
   // Save Address
-  // ---------------------------
   const saveAddress = async () => {
     if (!user?.id) return;
 
@@ -93,10 +82,7 @@ export default function AddressesTab() {
       loadAddresses();
     }
   };
-
-  // ---------------------------
   // Address Card UI
-  // ---------------------------
   const AddressCard = ({ title, data, type }) => {
     const isEditing = formType === type;
 
@@ -248,10 +234,7 @@ export default function AddressesTab() {
       </div>
     );
   };
-
-  // ---------------------------
   // MAIN UI
-  // ---------------------------
   return (
     <div style={{ padding: "0 10px" }}>
       <p style={{ marginBottom: "20px" }}>
